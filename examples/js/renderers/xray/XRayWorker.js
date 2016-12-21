@@ -58,9 +58,9 @@ function onMessageReceived(e) {
                 scene = e.data.scene;
 
                 if (isLeader) {
-                    //console.time("Scene compiled");
+                    console.time("Scene compiled");
                     XRAY.Scene.Compile(scene);
-                    //console.timeEnd("Scene compiled");
+                    console.timeEnd("Scene compiled");
                 }
             }
 
@@ -78,10 +78,19 @@ function onMessageReceived(e) {
 
         case "UPDATE":
 
-            imageWidth = e.data.width;
-            imageHeight = e.data.height;
-            // pixelMemory = new Uint8ClampedArray(e.data.pixelBuffer);
-            // sampleMemory = new Float32Array(e.data.sampleBuffer);
+            imageWidth = e.data.width || imageWidth;
+            imageHeight = e.data.height || imageHeight;
+
+            if(e.data.scene){
+                scene = e.data.scene;
+                if (isLeader) {
+                    console.time("Scene re-compiled");
+                    XRAY.Scene.Compile(scene);
+                    console.timeEnd("Scene re-compiled");
+                }
+            }
+
+            postMessage("UPDATED");
 
             break;
 

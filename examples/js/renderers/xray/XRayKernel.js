@@ -3443,10 +3443,12 @@ var Initialize_XRayKernel = function (XRAY) {
     unsafe._idToType[237222] = Scene;
     var MasterScene = (function () {
         function MasterScene(color) {
+            this.color = color;
+            MasterScene.defaultMaterial = Material.DiffuseMaterial(Color.HexColor(0xFF0000));
+            this.resetMemoryOffset = Atomics.load(unsafe._mem_i32, 1);
             this.scenePtr = Scene.NewScene(color);
             this.shapes = [];
             this.lights = [];
-            MasterScene.defaultMaterial = Material.DiffuseMaterial(Color.HexColor(0xFF0000));
         }
         MasterScene.prototype.setClearColor = function (color) {
             Color.HexColor(color, unsafe._mem_i32[((this.scenePtr) + 4) >> 2]);
@@ -3464,6 +3466,14 @@ var Initialize_XRayKernel = function (XRAY) {
             this.shapes.push(shape);
             if (unsafe._mem_f64[((Shape.MaterialAt(shape, Vector.ZERO)) + 32) >> 3] > 0) {
                 this.lights.push(shape);
+            }
+        };
+        MasterScene.prototype.Clear = function () {
+            if(this.scenePtr) {
+                Atomics.store(unsafe._mem_i32, 1, this.resetMemoryOffset);
+                this.scenePtr = Scene.NewScene(this.color);
+                this.shapes = [];
+                this.lights = [];
             }
         };
         MasterScene.prototype.Commit = function () {

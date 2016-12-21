@@ -59,6 +59,11 @@ var XRAY = XRAY || {};
                     this.onInitComplete(this);
                 }
             }
+            if (event.data == TraceJob.UPDATED) {
+                if (this.onUpdateComplete) {
+                    this.onUpdateComplete(this);
+                }
+            }
             if (event.data == TraceJob.TRACED) {
                 _isTracing = false;
                 TraceManager.flags[3 + this.id] = 0;
@@ -83,7 +88,8 @@ var XRAY = XRAY || {};
             this.send(parameters, transferable);
         }
 
-        this.update = function (parameters) {
+        this.update = function (parameters, onUpdate) {
+            this.onUpdateComplete = onUpdate;
             parameters.command = TraceJob.UPDATE;
             this.send(parameters);
         }
@@ -176,6 +182,7 @@ var XRAY = XRAY || {};
     }
     TraceJob.INIT = "INIT";
     TraceJob.UPDATE = "UPDATE";
+    TraceJob.UPDATED = "UPDATED";
     TraceJob.INITIALIZED = "INITIALIZED";
     TraceJob.TRACE = "TRACE";
     TraceJob.TRACED = "TRACED";
@@ -203,7 +210,7 @@ var XRAY = XRAY || {};
         var maxLoop = 1;
         var currentLoop = 0;
         var totalThreads = 0;
-        var _initialized;
+        var _initialized = false;
         var _isIterationFinished = true;
         var _isRenderingFinished = true;
         var _await;
@@ -212,6 +219,12 @@ var XRAY = XRAY || {};
         var lockCount = 0;
         var maxWidth = 1920;
         var maxHeight = 1080;
+
+        Object.defineProperty(this, "initialized", {
+            get : function () {
+                return _initialized;
+            }
+        });
 
         this.configure = function (parameters) {
 
@@ -239,40 +252,43 @@ var XRAY = XRAY || {};
                 webglWidth: parameters.webglWidth,
                 webglHeight: parameters.webglHeight
             };
-        }
+        };
 
         this.update = function (parameters) {
-
+            if(this.updating){
+                return;
+            }
+            this.updating = true;
             if (!stopped) {
                 this.stop();
             }
 
             this.clear();
 
-            width = parameters.width;
-            height = parameters.height;
-            traceParameters.imageWidth = parameters.width;
-            traceParameters.imageHeight = parameters.height;
+            width = parameters.width || width;
+            height = parameters.height || height;
+            traceParameters.imageWidth = parameters.width || traceParameters.imageWidth;
+            traceParameters.imageHeight = parameters.height || traceParameters.imageHeight;
+            traceParameters.scene = parameters.scene || traceParameters.scene;
 
-            // this.pixelMemory = new Uint8Array(new SharedArrayBuffer(width * height * 3));
-            // this.sampleMemory = new Float32Array(new SharedArrayBuffer(4 * width * height * 3));
-
-            // traceParameters.pixelBuffer = this.pixelMemory.buffer;
-            // traceParameters.sampleBuffer = this.sampleMemory.buffer;
-
-            threads.forEach(function (thread) {
-                thread.update(parameters);
-            });
-
-            if (!_isRenderingFinished) {
-                this.restart();
+            if(threads) {
+                var updateCount = 0;
+                threads.forEach(function (thread) {
+                    thread.update(parameters, function () {
+                        updateCount++;
+                        if(updateCount == totalThreads){
+                            this.restart();
+                            this.updating = false;
+                        }
+                    }.bind(this));
+                }.bind(this));
             }
-        }
+        };
 
         this.add = function (job) {
             queue.push(job);
             referenceQueue.push(job);
-        }
+        };
 
         this.init = function (callback) {
             console.log("Initializing threads...");
@@ -281,9 +297,9 @@ var XRAY = XRAY || {};
             totalThreads = threads.length;
             lockCount = threads.length;
             initNext(callback);
-        }
+        };
 
-        function initNext(callback) {
+        var initNext = function initNext(callback) {
 
             if (initCount == totalThreads) {
                 _initialized = true;
@@ -297,26 +313,26 @@ var XRAY = XRAY || {};
             }
 
             var thread = threads[initCount++];
-            thread.onThreadLocked = onThreadLocked.bind(this);
+            thread.onThreadLocked = onThreadLocked;
             thread.init(traceParameters, [
                 traceParameters.flagsBuffer,
                 traceParameters.pixelBuffer,
                 traceParameters.sampleBuffer,
                 traceParameters.turboBuffer
             ], function () {
-                initNext.call(this, callback);
-            }.bind(this));
-        }
+                initNext(callback);
+            });
+        }.bind(this);
 
-        function onThreadLocked() {
+        var onThreadLocked = function onThreadLocked() {
             lockCount++;
             if (this.isAllLocked && deferredStart) {
                 deferredStart = false;
                 this.clear();
                 this.restart();
             }
-            console.log("lockCount:" + lockCount);
-        }
+            //console.log("lockCount:" + lockCount);
+        }.bind(this);
 
         Object.defineProperty(this, "isAllThreadsFree", {
             get: function () {
@@ -343,7 +359,7 @@ var XRAY = XRAY || {};
                     flags[3 + i] = 0;
                 }
             }
-        }
+        };
 
         this.stop = function () {
 
@@ -366,7 +382,7 @@ var XRAY = XRAY || {};
                     job.runCount = 0;
                 }
             }
-        }
+        };
 
         this.clear = function () {
             for (var y = 0; y < height; y++) {
@@ -393,7 +409,7 @@ var XRAY = XRAY || {};
                     this.pixelMemory
                 );
             }
-        }
+        };
 
         resetTimerId = 0;
 
@@ -416,7 +432,7 @@ var XRAY = XRAY || {};
             } else {
                 deferredStart = true;
             }
-        }
+        };
 
         this.start = function () {
             if (currentLoop >= maxLoop || (queue && queue.length == 0 && deferredQueue.length === 0)) {
@@ -457,7 +473,7 @@ var XRAY = XRAY || {};
                     }
                 }
             }
-        }
+        };
 
         this.processQueue = function (job, thread) {
             if (this.updatePixels) {
@@ -489,7 +505,7 @@ var XRAY = XRAY || {};
                     this.initDeferredQueue();
                 }
             }
-        }
+        };
 
         this.initDeferredQueue = function () {
 
@@ -514,14 +530,13 @@ var XRAY = XRAY || {};
             this.start();
         }
 
-    }
+    };
     XRAY.TraceManager = TraceManager;
 
     /**
      * XRay view
      */
     var XRayView = function XRayView(sceneColor) {
-        this.scene = new XRAY.MasterScene(sceneColor || 0);
         this.camera = XRAY.Camera.LookAt(
             XRAY.Vector.NewVector(0, 10, 0),
             XRAY.Vector.NewVector(0, 0, 0),
@@ -530,11 +545,15 @@ var XRAY = XRAY || {};
         );
 
         this.setScene = function (scene) {
+            if(this.scene && this.scene.scenePtr){
+                this.scene.Clear();
+            }
+            this.scene = new XRAY.MasterScene(sceneColor || 0);
             console.time("Scene builder");
             this.loadChildren(scene);
             this.scene.Commit();
             console.timeEnd("Scene builder");
-        }
+        };
 
         this.updateCamera = function (camera, ratioX, ratioY, ratioZ) {
             if (ratioX === void 0) { ratioX = 1; }
@@ -560,7 +579,7 @@ var XRAY = XRAY || {};
             });
 
             this.dirty = true;
-        }
+        };
 
         // Prepare three.js scene
         var identityMatrix = new THREE.Matrix4().identity();
@@ -584,7 +603,7 @@ var XRAY = XRAY || {};
                     }
                 }
             }
-        }
+        };
 
         function buildSceneObject(src) {
 
@@ -755,14 +774,14 @@ var XRAY = XRAY || {};
                     }
                 }
             }
-            let meshRef = XRAY.Mesh.NewMesh(XRAY.Triangle.Pack(triangles));
+            var meshRef = XRAY.Mesh.NewMesh(XRAY.Triangle.Pack(triangles));
             // Mesh.SmoothNormals(meshRef);
             return meshRef;
         }
 
         computeNormals = function (positions) {
             return new Float32Array(positions.length);
-        }
+        };
         function getTurboLight(src) {
             if (src.children.length > 0) {
                 var lightGeometry = src.children[0].geometry;
@@ -798,7 +817,7 @@ var XRAY = XRAY || {};
                 return XRAY.TransformedShape.NewTransformedShape(shape, mat);
             }
         }
-    }
+    };
     XRayView.getTurboMaterial = function (srcMaterial) {
         if (srcMaterial instanceof THREE.MultiMaterial) {
             srcMaterial = srcMaterial.materials[0];
@@ -813,6 +832,6 @@ var XRAY = XRAY || {};
         XRAY.Material.setTransparent(material, srcMaterial.transparent ? 1 : 0);
 
         return material;
-    }
+    };
     XRAY.XRayView = XRayView;
 })(XRAY);

@@ -18,12 +18,15 @@ THREE.XRayRenderer = function (parameters) {
 	_super.call(this);
 
 	//XRay members
+	var initialized = false;
+	var initializing = false;
+	var container;
 	var canvas;
 	var context;
 	var imageData;
 	var view;
 	var traceManager;
-	var threejsScene = null;
+	this.threejsScene = null;
 	var bucketSize = 32;
 	//Render options
 	var cameraSamples = -1;
@@ -92,16 +95,32 @@ THREE.XRayRenderer = function (parameters) {
 
 	this.render = function (scene, camera) {
 
-		if (view && !threejsScene) {
-			threejsScene = scene;
-			view.setScene(scene);
-			traceManager.init(function () {
-				console.log("Ready to start");
+		if (!this.threejsScene) {
+			this.threejsScene = scene;
+			if(!initialized && !initializing) {
+				initializing = true;
+				this.setupRenderer();
+				view.setScene(scene);
+                this.setupTracer();
+
+                traceManager.init(function () {
+                    console.log("Ready to start");
+                    updateCamera(camera);
+                    traceManager.start();
+                    _traceState = true;
+                    initialized = true;
+                    initializing = false;
+                });
+            }else{
 				updateCamera(camera);
-				traceManager.start();
-				_traceState = true;
-			});
+				if (_traceState) {
+					traceManager.stop();
+					traceManager.clear();
+					traceManager.restart();
+				}
+			}
 		}
+
 		_super.render.call(this, scene, camera);
 
 	}
@@ -129,7 +148,7 @@ THREE.XRayRenderer = function (parameters) {
 		} else {
 			turbo.init(maxMemory || 1024);
 			Initialize_XRayKernel(XRAY);
-			setTimeout(this.setupRenderer.bind(this), 0);
+			//setTimeout(this.setupRenderer.bind(this), 0);
 		}
 	}
 
@@ -137,28 +156,36 @@ THREE.XRayRenderer = function (parameters) {
 	 * Setup XRay renderer
 	 */
 	this.setupRenderer = function () {
-		canvas = document.createElement('canvas');
-		canvas.style.pointerEvents = "none";
-		canvas.style.border = "1px solid #C58F33";
-		context = canvas.getContext('2d');
-		imageData = context.getImageData(0, 0, width, height);
+        container = document.createElement('div');
+        canvas = document.createElement('canvas');
+        container.style.pointerEvents = "none";
+        canvas.style.pointerEvents = "none";
+        container.style.border = "1px solid #C58F33";
+        container.style.display = "block";
+        context = canvas.getContext('2d');
+        imageData = context.getImageData(0, 0, width, height);
 
-		canvas.width = width;
-		canvas.height = height;
-		canvas.style.position = "absolute";
-		canvas.style.left = 0;
-		canvas.style.left = xOffset + "px";
-		canvas.style.top = yOffset + "px";
+        container.width = width;
+        container.height = height;
+        canvas.width = width;
+        canvas.height = height;
+        container.style.position = "absolute";
+        container.style.left = xOffset + "px";
+        container.style.top = yOffset + "px";
 
-		this.domElement.parentElement.appendChild(canvas);
+        container.appendChild(canvas);
+        this.domElement.parentElement.appendChild(container);
 
-		view = new XRAY.XRayView(0x000000);
-		// view.scene.AddDebugScene();
-		// view.scene.AddDefaultLights();
+        view = new XRAY.XRayView(0x000000);
+        // view.scene.AddDebugScene();
+        // view.scene.AddDefaultLights();
+    };
+
+    this.setupTracer = function () {
 		traceManager = new XRAY.TraceManager();
 		traceManager.configure({
-			scene: view.scene.scenePtr,
 			camera: view.camera,
+			scene: view.scene.scenePtr,
 			width: width,
 			height: height,
 			webglWidth: webglWidth,
@@ -202,7 +229,7 @@ THREE.XRayRenderer = function (parameters) {
 			clearTimeout(timeoutid);
 			timeoutid = setTimeout(function () {
 				if (_traceState) {
-					traceManager.restart()
+					traceManager.restart();
 					canvas.style.display = "";
 				}
 			}, 500);
@@ -214,17 +241,31 @@ THREE.XRayRenderer = function (parameters) {
 			var ratio1 = width / webglWidth;
 			var ratio2 = height / webglHeight;
 			var ratio = ratio1 < ratio2 ? ratio1 : ratio2;
-			view.updateCamera(editor.camera, ratio1, ratio2, ratio);
+			view.updateCamera(editor.camera);
 		}
 	}
+
+	this.updateScene = function (scene) {
+		traceManager.stop();
+		traceManager.clear();
+		view.setScene(scene);
+		traceManager.update({scene:view.scene.scenePtr});
+		if (_traceState) {
+			traceManager.restart();
+		}
+    };
 
 	function updateRenderer() {
 
 		if (canvas) {
+			container.style.width = width + "px";
+        	container.style.height = height + "px";
+			container.style.left = xOffset + "px";
+			container.style.top = yOffset + "px";
+
 			canvas.width = width;
 			canvas.height = height;
-			canvas.style.left = xOffset + "px";
-			canvas.style.top = yOffset + "px";
+
 			imageData = context.getImageData(0, 0, width, height);
 		}
 		if (traceManager) {

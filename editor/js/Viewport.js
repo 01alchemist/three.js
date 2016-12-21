@@ -328,10 +328,20 @@ var Viewport = function ( editor ) {
 
 	} );
 
-	signals.traceStateChanged.add( function ( newState ) {
+	signals.xrayStateChanged.add( function ( newState ) {
+
 		if(renderer && renderer.XRAY){
 			renderer.toggleGIView(newState);
 		}
+
+	} );
+
+	signals.xrayUpdateScene.add( function ( newState ) {
+
+		if(renderer && renderer.XRAY){
+			renderer.updateScene(scene);
+		}
+
 	} );
 
 	signals.rendererChanged.add( function ( newRenderer ) {

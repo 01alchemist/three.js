@@ -243,14 +243,15 @@ if (typeof SharedArrayBuffer === "undefined") {
 
         function alloc_sab(nbytes, alignment) {
             var _this = this;
-            if (this.totalFreeMemory > nbytes) {
-                this.freeList.forEach(function (freeMem, index) {
-                    if (freeMem.size == nbytes) {
-                        _this.freeList.splice(index, 1);
-                        return freeMem.ptr;
-                    }
-                });
-            }
+            //Forget GC for now
+            // if (this.totalFreeMemory > nbytes) {
+            //     this.freeList.forEach(function (freeMem, index) {
+            //         if (freeMem.size == nbytes) {
+            //             _this.freeList.splice(index, 1);
+            //             return freeMem.ptr;
+            //         }
+            //     });
+            // }
             do {
                 var p = Atomics.load(this._mem_i32, 1);
                 var q = (p + (alignment - 1)) & ~(alignment - 1);

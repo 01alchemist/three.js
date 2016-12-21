@@ -109,7 +109,7 @@ Sidebar.Project = function ( editor ) {
 	var xray = new UI.Checkbox( config.getKey( 'project/xray-gi' ) ).setLeft( '100px' ).onChange( function () {
 
 		config.setKey( 'project/xray-gi', this.getValue() );
-		signals.traceStateChanged.dispatch(this.getValue());
+		signals.xrayStateChanged.dispatch(this.getValue());
 
 	} );
 
@@ -117,6 +117,19 @@ Sidebar.Project = function ( editor ) {
 	xrayRow.add( xray );
 
 	container.add( xrayRow );
+
+	// XRay reload
+
+	var xrayUpdateRow = new UI.Row();
+	var xrayUpdate = new UI.Button( "Update scene" ).setLeft( '95px' ).onClick( function () {
+
+		signals.xrayUpdateScene.dispatch(true);
+
+	} );
+
+	xrayUpdateRow.add( xrayUpdate );
+
+	container.add( xrayUpdateRow );
 
 	// Editable
 
