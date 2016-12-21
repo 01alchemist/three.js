@@ -37,8 +37,8 @@ THREE.XRayRenderer = function (parameters) {
 
 	var maxWidth = 1920;
 	var maxHeight = 1080;
-	var width = maxWidth / 2;
-	var height = maxHeight / 2;
+	var width = 1280 / 2;
+	var height = 720 / 2;
 	var xOffset = 0;
 	var yOffset = 0;
 	var webglWidth;
@@ -95,11 +95,10 @@ THREE.XRayRenderer = function (parameters) {
 
 	this.render = function (scene, camera) {
 
-		if (!this.threejsScene) {
+		if (view && !this.threejsScene) {
 			this.threejsScene = scene;
 			if(!initialized && !initializing) {
 				initializing = true;
-				this.setupRenderer();
 				view.setScene(scene);
                 this.setupTracer();
 
@@ -148,7 +147,7 @@ THREE.XRayRenderer = function (parameters) {
 		} else {
 			turbo.init(maxMemory || 1024);
 			Initialize_XRayKernel(XRAY);
-			//setTimeout(this.setupRenderer.bind(this), 0);
+			setTimeout(this.setupRenderer.bind(this), 0);
 		}
 	}
 
@@ -251,7 +250,7 @@ THREE.XRayRenderer = function (parameters) {
 		view.setScene(scene);
 		traceManager.update({scene:view.scene.scenePtr});
 		if (_traceState) {
-			traceManager.restart();
+			//traceManager.restart();
 		}
     };
 
@@ -268,6 +267,7 @@ THREE.XRayRenderer = function (parameters) {
 
 			imageData = context.getImageData(0, 0, width, height);
 		}
+
 		if (traceManager) {
 			console.log(`Renderer updated:: width: ${width}, height: ${height}`);
 

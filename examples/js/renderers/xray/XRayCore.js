@@ -543,12 +543,17 @@ var XRAY = XRAY || {};
             XRAY.Vector.NewVector(0, 0, 1),
             45
         );
+        
+        var resetMemoryOffset = Atomics.load(unsafe._mem_i32, 1);
+        this.scene = new XRAY.MasterScene(sceneColor || 0);
 
         this.setScene = function (scene) {
+            
             if(this.scene && this.scene.scenePtr){
+                Atomics.store(unsafe._mem_i32, 1, resetMemoryOffset);
                 this.scene.Clear();
             }
-            this.scene = new XRAY.MasterScene(sceneColor || 0);
+
             console.time("Scene builder");
             this.loadChildren(scene);
             this.scene.Commit();

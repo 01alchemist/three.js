@@ -3445,7 +3445,7 @@ var Initialize_XRayKernel = function (XRAY) {
         function MasterScene(color) {
             this.color = color;
             MasterScene.defaultMaterial = Material.DiffuseMaterial(Color.HexColor(0xFF0000));
-            this.resetMemoryOffset = Atomics.load(unsafe._mem_i32, 1);
+            //this.resetMemoryOffset = Atomics.load(unsafe._mem_i32, 1);
             this.scenePtr = Scene.NewScene(color);
             this.shapes = [];
             this.lights = [];
@@ -3470,7 +3470,7 @@ var Initialize_XRayKernel = function (XRAY) {
         };
         MasterScene.prototype.Clear = function () {
             if(this.scenePtr) {
-                Atomics.store(unsafe._mem_i32, 1, this.resetMemoryOffset);
+                //Atomics.store(unsafe._mem_i32, 1, this.resetMemoryOffset);
                 this.scenePtr = Scene.NewScene(this.color);
                 this.shapes = [];
                 this.lights = [];
