@@ -13,7 +13,8 @@ Sidebar.Project = function ( editor ) {
 		'CanvasRenderer': THREE.CanvasRenderer,
 		'SVGRenderer': THREE.SVGRenderer,
 		'SoftwareRenderer': THREE.SoftwareRenderer,
-		'RaytracingRenderer': THREE.RaytracingRenderer
+		'RaytracingRenderer': THREE.RaytracingRenderer,
+		'WebGL+XRay': THREE.XRayRenderer
 
 	};
 
@@ -101,6 +102,22 @@ Sidebar.Project = function ( editor ) {
 
 	container.add( rendererPropertiesRow );
 
+	// XRay toggle
+
+	var xrayRow = new UI.Row();
+	config.setKey( 'project/xray-gi', true);
+	var xray = new UI.Checkbox( config.getKey( 'project/xray-gi' ) ).setLeft( '100px' ).onChange( function () {
+
+		config.setKey( 'project/xray-gi', this.getValue() );
+		signals.traceStateChanged.dispatch(this.getValue());
+
+	} );
+
+	xrayRow.add( new UI.Text( 'XRAY View' ).setWidth( '90px' ) );
+	xrayRow.add( xray );
+
+	container.add( xrayRow );
+
 	// Editable
 
 	var editableRow = new UI.Row();
@@ -147,6 +164,9 @@ Sidebar.Project = function ( editor ) {
 		}
 
 		rendererPropertiesRow.setDisplay( type === 'WebGLRenderer' ? '' : 'none' );
+		xrayRow.setDisplay( type === 'WebGL+XRay' ? '' : 'none' );
+		
+		type = rendererTypes[ type ] === undefined ? 'WebGLRenderer' : type;
 
 		var renderer = new rendererTypes[ type ]( { antialias: antialias} );
 		renderer.gammaInput = gammaIn;

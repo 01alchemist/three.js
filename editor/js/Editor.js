@@ -29,6 +29,10 @@ var Editor = function () {
 		enteredVR: new Signal(),
 		exitedVR: new Signal(),
 
+		//XRay
+
+		traceStateChanged: new Signal(),
+
 		// actions
 
 		showModal: new Signal(),
