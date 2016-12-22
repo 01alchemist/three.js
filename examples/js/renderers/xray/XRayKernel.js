@@ -1061,7 +1061,7 @@ var Initialize_XRayKernel = function (XRAY) {
             }
             return box;
         };
-        Box.Anchor = function (SELF, anchor, c) {
+        Box.Anchor_mem = function (SELF, anchor, c) {
             var size = Box.Size(SELF);
             var tmp = Vector.Mul_mem(size, anchor);
             free(size);
@@ -1073,11 +1073,17 @@ var Initialize_XRayKernel = function (XRAY) {
             }
             return Vector.Add_mem(unsafe._mem_i32[(SELF + 4) >> 2], c, c);
         };
+        Box.Anchor = function (SELF, anchor) {
+            var size = Box.Size(SELF);
+            return new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2]).add(size.mul(anchor));
+        };
         Box.Center = function (SELF) {
-            var anchor = Vector.NewVector(0.5, 0.5, 0.5);
+            //var anchor = Vector.NewVector(0.5, 0.5, 0.5);
+            //return Box.Anchor(SELF, anchor, anchor);
+            var anchor = new Vector3(0.5, 0.5, 0.5);
             return Box.Anchor(SELF, anchor, anchor);
         };
-        Box.OuterRadius = function (SELF) {
+        Box.OuterRadius_mem = function (SELF) {
             var center = Box.Center(SELF);
             var tmp = Vector.Sub_mem(unsafe._mem_i32[(SELF + 4) >> 2], center);
             var len = Vector.Length_mem(tmp);
@@ -1085,15 +1091,26 @@ var Initialize_XRayKernel = function (XRAY) {
             free(tmp);
             return len;
         };
-        Box.InnerRadius = function (SELF) {
+        Box.OuterRadius = function (SELF) {
+            var center = Box.Center(SELF);
+            return new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2]).sub(center).length();
+        };
+        Box.InnerRadius_mem = function (SELF) {
             var center = Box.Center(SELF);
             var tmp = Vector.Sub_mem(center, unsafe._mem_i32[(SELF + 4) >> 2]);
             var result = Vector.MaxComponent_mem(tmp);
             free(tmp);
             return result;
         };
-        Box.Size = function (SELF) {
+        Box.InnerRadius = function (SELF) {
+            var center = Box.Center(SELF);
+            return center.sub(new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2])).maxComponent();
+        };
+        Box.Size_mem = function (SELF) {
             return Vector.Sub_mem(unsafe._mem_i32[(SELF + 8) >> 2], unsafe._mem_i32[(SELF + 4) >> 2]);
+        };
+        Box.Size = function (SELF) {
+            return new Vector3.read(unsafe._mem_i32[(SELF + 8) >> 2]).sub(new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2]));
         };
         Box.Extend = function (SELF, b) {
             var min = unsafe._mem_i32[(SELF + 4) >> 2];
@@ -3785,7 +3802,7 @@ var Initialize_XRayKernel = function (XRAY) {
             switch (Shape.Type(light)) {
                 case ShapeType.SPHERE:
                     radius = unsafe._mem_f64[(light + 16) >> 3];
-                    center = unsafe._mem_i32[(light + 8) >> 2];
+                    center = new Vector3().read(unsafe._mem_i32[(light + 8) >> 2]);
                     break;
                 default:
                     var box = Shape.BoundingBox(light);
@@ -3793,8 +3810,8 @@ var Initialize_XRayKernel = function (XRAY) {
                     center = Box.Center(box);
                     break;
             }
-            var _center = new Vector3().read(center);
-            free(center);
+            //var _center = new Vector3().read(center);
+            var _center = center;
             var point = _center;
             if (this.SoftShadows) {
                 var x = void 0;
@@ -3935,6 +3952,9 @@ var Initialize_XRayKernel = function (XRAY) {
         };
         Vector3.prototype.minComponent = function () {
             return Math.min(Math.min(this.x, this.y), this.z);
+        };
+        Vector3.prototype.maxComponent = function () {
+            return Math.max(Math.max(this.x, this.y), this.z);
         };
         Vector3.prototype.reflect = function (i) {
             return i.sub(this.mulScalar(2 * this.dot(i)));
