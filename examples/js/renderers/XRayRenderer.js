@@ -27,7 +27,7 @@ THREE.XRayRenderer = function (parameters) {
 	var view;
 	var traceManager;
 	this.threejsScene = null;
-	var bucketSize = 32;
+	var bucketSize = 64;
 	//Render options
 	var cameraSamples = -1;
 	var hitSamples = 1;
@@ -51,11 +51,13 @@ THREE.XRayRenderer = function (parameters) {
 
 	this.setSize = function (_width, _height, updateStyle) {
 
+		width = _width;
+		height = _height;
 		webglWidth = _width;
 		webglHeight = _height;
 
-		xOffset = (_width - width) / 2;
-		yOffset = (_height - height) / 2;
+		//xOffset = (_width - width) / 2;
+		//yOffset = (_height - height) / 2;
 		// width = _width //- xOffset;
 		//height = _height //- yOffset;
 
