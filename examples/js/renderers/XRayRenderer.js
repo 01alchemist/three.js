@@ -1,9 +1,7 @@
 /**
- * XRayRenderer renders by pathtracing it's scene. However, it does not
- * compute the pixels itself but it hands off and coordinates the taks for workers.
- * The workers compute the pixel values and this renderer simply paints it to the Canvas.
- *
- * @author 01alchemist / http://github.com/01alchemist
+ * XRayRenderer renders by pathtracing it's scene. 
+ * Rendering job is distributed between available CPUs using SharedArrayBuffer
+ * @author 01alchemist (Nidin Vinayakan) / http://github.com/01alchemist
  */
 
 var XRAY = XRAY || {};
