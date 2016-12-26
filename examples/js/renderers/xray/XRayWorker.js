@@ -30,6 +30,12 @@ var iterations = 1;
 var locked;
 var isLeader;
 
+var IDLE = 0;
+var TRACING = 1;
+var TRACED = 2;
+var LOCKING = 3;
+var LOCKED = 4;
+
 function onMessageReceived(e) {
 
     var data = e.data;
@@ -96,7 +102,7 @@ function onMessageReceived(e) {
 
         case "TRACE":
 
-            if (flags[3 + id] === 2) {//thread locked
+            if (Atomics.load(flags, id) === LOCKING) {//thread locked
                 //console.log("exit:1");
                 lock();
                 return;
@@ -125,24 +131,31 @@ function onMessageReceived(e) {
 
             if (iterations > 0 && e.data.blockIterations) {
                 for (var i = 0; i < e.data.blockIterations; i++) {
-                    if (flags[3 + id] === 2) {//thread locked
+                    if (Atomics.load(flags, id) === LOCKING) {//thread locked
                         lock();
                         return;
                     }
                     run();
                 }
             } else {
-                if (flags[3 + id] === 2) {//thread locked
+                if (Atomics.load(flags, id) === LOCKING) {//thread locked
                     lock();
                     return;
                 }
                 run();
             }
-            if (flags[3 + id] === 2) {//thread locked
+            if (Atomics.load(flags, id) === LOCKING) {//thread locked
                 lock();
                 return;
             }
             postMessage("TRACED");
+            break;
+
+        case "LOCK":
+            if (!locked) {
+                locked = true;
+            }
+            postMessage("LOCKED");
             break;
     }
 
@@ -172,7 +185,7 @@ function run() {
 
         for (var x = xoffset; x < xoffset + width; x++) {
 
-            if (flags[3 + id] === 2) {//thread locked
+            if (Atomics.load(flags, id) === LOCKING) {//thread locked
                 //console.log("exit:3");
                 lock();
                 return;
@@ -209,7 +222,7 @@ function run() {
                 c = c.divScalar(n * n);
             }
 
-            if (flags[3 + id] === 2) {//thread locked
+            if (Atomics.load(flags, id) === LOCKING) {//thread locked
                 //console.log("exit:7");
                 lock();
                 return;
@@ -225,7 +238,7 @@ function run() {
 
 function updatePixel(color, si) {
 
-    if (flags[3 + id] === 2) {//thread locked
+    if (Atomics.load(flags, id) === LOCKING) {//thread locked
         //console.log("exit:8");
         lock();
         return;

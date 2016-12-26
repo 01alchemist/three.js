@@ -3489,6 +3489,7 @@ var Initialize_XRayKernel = function (XRAY) {
             if(this.scenePtr) {
                 //Atomics.store(unsafe._mem_i32, 1, this.resetMemoryOffset);
                 this.scenePtr = Scene.NewScene(this.color);
+                unsafe._mem_i32[(this.scenePtr + 40) >> 2] = 0;
                 this.shapes = [];
                 this.lights = [];
             }

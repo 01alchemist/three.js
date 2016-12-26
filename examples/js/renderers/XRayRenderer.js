@@ -32,7 +32,7 @@ THREE.XRayRenderer = function (parameters) {
 	var cameraSamples = -1;
 	var hitSamples = 1;
 	var bounces = 4;
-	var targetIterations = 100;
+	var targetIterations = 10000;
 	var blockIterations = 1;
 
 	var maxWidth = 1920;
@@ -247,13 +247,14 @@ THREE.XRayRenderer = function (parameters) {
 	}
 
 	this.updateScene = function (scene) {
-		traceManager.stop();
+		traceManager.stop(() => {
+			view.setScene(scene);
+			traceManager.update({scene:view.scene.scenePtr});
+			if (_traceState) {
+				traceManager.restart();
+			}
+		});
 		traceManager.clear();
-		view.setScene(scene);
-		traceManager.update({scene:view.scene.scenePtr});
-		if (_traceState) {
-			//traceManager.restart();
-		}
     };
 
 	function updateRenderer() {
@@ -358,7 +359,7 @@ THREE.XRayRenderer = function (parameters) {
 		return { r: Math.random(), g: Math.random(), b: Math.random() };
 	}
 
-	//XRAY.ThreadPool.overrideMaxThreads = 1;
+	XRAY.ThreadPool.overrideMaxThreads = 7;
 	this.initialize();
 
 };
