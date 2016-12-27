@@ -50,7 +50,7 @@ THREE.GLTFLoader = ( function () {
 			var parser = new GLTFParser( json, {
 
 				path: path || this.path,
-				crossOrigin: !! this.crossOrigin
+				crossOrigin: this.crossOrigin
 
 			} );
 
@@ -793,7 +793,7 @@ THREE.GLTFLoader = ( function () {
 
 					}
 
-					textureLoader.crossOrigin = options.crossOrigin || false;
+					textureLoader.setCrossOrigin( options.crossOrigin );
 
 					textureLoader.load( resolveURL( source.uri, options.path ), function ( _texture ) {
 
@@ -1486,6 +1486,13 @@ THREE.GLTFLoader = ( function () {
 
 							var mesh = node.meshes[ meshId ];
 							var group = dependencies.meshes[ mesh ];
+
+							if ( group === undefined ) {
+
+								console.warn( 'GLTFLoader: Couldn\'t find node "' + mesh + '".' );
+								continue;
+
+							}
 
 							for ( var childrenId in group.children ) {
 
