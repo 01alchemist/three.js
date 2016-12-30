@@ -353,6 +353,7 @@ var XRAY = XRAY || {};
                 let thread;
                 for (let i = 0; i < threads.length; i++) {
                     thread = threads[i];
+                    // if (Atomics.load(flags, i) !== Thread.IDLE && Atomics.load(flags, i) !== Thread.LOCKED) {
                     if (Atomics.load(flags, i) !== Thread.LOCKED) {
                         return false;
                     }
@@ -530,7 +531,7 @@ var XRAY = XRAY || {};
                 if (this.isAllThreadsFree) {
                     _isIterationFinished = true;
                     //console.timeEnd('trace::iteration completed');
-                    this.initDeferredQueue();
+                    setTimeout(this.initDeferredQueue.bind(this), 50);
                 }
             }
         };
@@ -584,6 +585,7 @@ var XRAY = XRAY || {};
 
             if (this.scene && this.scene.scenePtr) {
 
+                unsafe.lock();
                 let top = Atomics.load(unsafe._mem_i32, 1);
 
                 for (let i = resetMemoryOffset; i < top; i++) {
@@ -592,8 +594,11 @@ var XRAY = XRAY || {};
 
                 Atomics.store(unsafe._mem_i32, 1, resetMemoryOffset);
 
+                unsafe.unlock();
                 this.scene.Clear();
             }
+
+            this.scene.setClearColor(scene.background.getHex());
 
             console.time("Scene builder");
             this.loadChildren(scene);
@@ -827,7 +832,7 @@ var XRAY = XRAY || {};
                     }
                 }
             }
-            let meshRef = XRAY.Mesh.NewMesh(XRAY.Triangle.Pack(triangles));
+            let meshRef = XRAY.Mesh.NewMesh(XRAY.Triangle.Pack(triangles), material);
             if (smooth) {
                 XRAY.Mesh.SmoothNormals(meshRef);
             }
@@ -871,15 +876,20 @@ var XRAY = XRAY || {};
         if (srcMaterial instanceof THREE.MultiMaterial) {
             srcMaterial = srcMaterial.materials[0];
         }
-
-        let material = XRAY.Material.DiffuseMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()));
-
-        XRAY.Material.setIndex(material, srcMaterial.ior ? srcMaterial.ior : 1);
-        XRAY.Material.setTint(material, srcMaterial.tint ? srcMaterial.tint : 0);
-        XRAY.Material.setGloss(material, srcMaterial.gloss ? srcMaterial.gloss : 0);
-        XRAY.Material.setEmittance(material, srcMaterial.emittance ? srcMaterial.emittance : 0);
-        XRAY.Material.setTransparent(material, srcMaterial.transparent ? 1 : 0);
-
+        let material;
+        let emissiveColor = srcMaterial.emissive.getHex();
+        if(emissiveColor > 0){
+            let emissiveHSL = srcMaterial.emissive.getHSL();
+            material = XRAY.Material.LightMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()), emissiveHSL.l * 10);
+            material.isLight = true;
+        }else {
+            material = XRAY.Material.DiffuseMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()));
+            XRAY.Material.setIndex(material, srcMaterial.ior ? srcMaterial.ior : 1.3);
+            XRAY.Material.setTint(material, srcMaterial.tint ? srcMaterial.tint : 0);
+            XRAY.Material.setGloss(material, srcMaterial.gloss ? srcMaterial.gloss : 0);
+            XRAY.Material.setTransparent(material, srcMaterial.transparent ? 1 : 0);
+            material.isLight = false;
+        }
         return material;
     };
     XRAY.XRayView = XRayView;

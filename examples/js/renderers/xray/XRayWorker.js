@@ -251,6 +251,10 @@ function updatePixel(color, si) {
     pixelMemory[si + 1] = Math.max(0, Math.min(255, (sampleMemory[si + 1] / iterations) * 255));
     pixelMemory[si + 2] = Math.max(0, Math.min(255, (sampleMemory[si + 2] / iterations) * 255));
 
+    Atomics.store(flags, id, IDLE);
+
+    color = null;
+    delete color;
 }
 
 function checkSamples() {

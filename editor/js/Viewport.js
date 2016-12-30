@@ -508,7 +508,9 @@ var Viewport = function ( editor ) {
 	signals.sceneBackgroundChanged.add( function ( backgroundColor ) {
 
 		scene.background.setHex( backgroundColor );
-
+		if(renderer && renderer.XRAY){
+			renderer.updateBackground(backgroundColor);
+		}
 		render();
 
 	} );

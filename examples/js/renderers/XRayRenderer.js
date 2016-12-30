@@ -44,7 +44,7 @@ THREE.XRayRenderer = function (parameters) {
 
 	//Internals
 	var _traceState = false;
-	var _viewState = false;
+	var _viewState = true;
 
 	_super.setSize = this.setSize;
 
@@ -128,6 +128,11 @@ THREE.XRayRenderer = function (parameters) {
 	/**
 	 * XRay specific methods
 	 */
+	this.updateBackground = function (newValue) {
+		if(view){
+			view.scene.setClearColor(newValue);
+		}
+	};
 	this.toggleGIView = function (newValue) {
 		canvas.style.display = newValue ? "" : "none";
 		_viewState = newValue;
@@ -136,10 +141,10 @@ THREE.XRayRenderer = function (parameters) {
 	this.toggleTrace = function (newValue) {
 		_traceState = newValue;
 		if (_traceState) {
+			traceManager.clear();
 			traceManager.restart();
 		} else {
 			traceManager.stop();
-			traceManager.clear();
 		}
 	};
 
@@ -177,7 +182,7 @@ THREE.XRayRenderer = function (parameters) {
         container.style.left = xOffset + "px";
         container.style.top = yOffset + "px";
 
-        this.toggleGIView(false);
+        //this.toggleGIView(false);
 
         container.appendChild(canvas);
         this.domElement.parentElement.appendChild(container);
@@ -377,7 +382,7 @@ THREE.XRayRenderer = function (parameters) {
 				data[i + 3] = 255;
 			}
 		}
-		context.putImageData(imageData, 0, 0);
+		//context.putImageData(imageData, 0, 0);
 	}
 
 	function yellow() {

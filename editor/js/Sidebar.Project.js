@@ -105,7 +105,7 @@ Sidebar.Project = function ( editor ) {
 	// XRay toggle
 
 	var xrayRow = new UI.Row();
-	config.setKey( 'project/xray-gi-view', false);
+	config.setKey( 'project/xray-gi-view', true);
 	var xray = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-view' ), "View" ).onChange( function () {
 
 		config.setKey( 'project/xray-gi-view', this.getValue() );

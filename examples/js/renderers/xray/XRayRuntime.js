@@ -25,6 +25,7 @@ if (typeof SharedArrayBuffer === "undefined") {
         var RuntimeConstructor = (function () {
             function RuntimeConstructor() {
                 this.NULL = 0;
+                this.locked = false;
                 this.int8 = { SIZE: 1, ALIGN: 1, NAME: "int8" };
                 this.uint8 = { SIZE: 1, ALIGN: 1, NAME: "uint8" };
                 this.int16 = { SIZE: 2, ALIGN: 2, NAME: "int16" };
@@ -97,12 +98,24 @@ if (typeof SharedArrayBuffer === "undefined") {
                 }
             };
 
+            RuntimeConstructor.prototype.lock = function () {
+                this.locked = true;
+            };
+
+            RuntimeConstructor.prototype.unlock = function () {
+                this.locked = false;
+            };
+
             RuntimeConstructor.prototype.internal_alloc = function (nbytes, alignment) {
                 // Overridden during initialization.
                 throw new Error("Not initialized");
             };
 
             RuntimeConstructor.prototype.alloc = function (nbytes, alignment) {
+                if(this.locked){
+                    console.error("Sorry! Heap is locked, unsafe.unlock() to release the heap");
+                    return;
+                }
                 var p = this.internal_alloc(nbytes, alignment);
                 if (p == 0)
                     throw new MemoryError("Out of memory");
