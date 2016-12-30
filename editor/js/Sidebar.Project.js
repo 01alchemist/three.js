@@ -105,16 +105,25 @@ Sidebar.Project = function ( editor ) {
 	// XRay toggle
 
 	var xrayRow = new UI.Row();
-	config.setKey( 'project/xray-gi', true);
-	var xray = new UI.Checkbox( config.getKey( 'project/xray-gi' ) ).setLeft( '100px' ).onChange( function () {
+	config.setKey( 'project/xray-gi-view', false);
+	var xray = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-view' ), "View" ).onChange( function () {
 
-		config.setKey( 'project/xray-gi', this.getValue() );
-		signals.xrayStateChanged.dispatch(this.getValue());
+		config.setKey( 'project/xray-gi-view', this.getValue() );
+		signals.xrayViewStateChanged.dispatch(this.getValue());
 
 	} );
 
-	xrayRow.add( new UI.Text( 'XRAY View' ).setWidth( '90px' ) );
+	config.setKey( 'project/xray-gi-raytrace', true);
+	var raytrace = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-raytrace' ), "Trace" ).onChange( function () {
+
+		config.setKey( 'project/xray-gi-raytrace', this.getValue() );
+		signals.xrayTraceStateChanged.dispatch(this.getValue());
+
+	} );
+
+	xrayRow.add( new UI.Text( 'XRAY' ).setWidth( '90px' ) );
 	xrayRow.add( xray );
+	xrayRow.add( raytrace );
 
 	container.add( xrayRow );
 

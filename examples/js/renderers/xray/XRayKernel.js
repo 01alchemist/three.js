@@ -33,19 +33,19 @@ var Initialize_XRayKernel = function (XRAY) {
         return { x: x, y: y, z: z };
     }
     function xyzw(x, y, z, w) {
-        return { x: x, y: y, z: z, w: w };
+        return { x: x, y: y, z: z, W: w };
     }
     function F3(a, b, c) {
-        return { a: a, b: b, c: c };
+        return { A: a, b: b, C: c };
     }
     function rgb(r, g, b) {
         return { r: r, g: g, b: b };
     }
     function ray(origin, direction) {
-        return { origin: origin, direction: direction };
+        return { Origin: origin, Direction: direction };
     }
     function free(ptr) {
-        turbo.Runtime.free(ptr);
+        unsafe.free(ptr);
     }
     (function (Axis) {
         Axis[Axis["AxisNone"] = 0] = "AxisNone";
@@ -93,11 +93,11 @@ var Initialize_XRayKernel = function (XRAY) {
                 return Color.Init_mem(ptr, color, g, b);
             }
         };
-        Color.HexColor = function (hex,  c) {
+        Color.HexColor = function (hex) {
             var r = ((hex >> 16) & 255) / 255;
             var g = ((hex >> 8) & 255) / 255;
             var b = (hex & 255) / 255;
-            var ptr =  c ? c : Color.initInstance(unsafe.alloc(32, 8));
+            var ptr = Color.initInstance(unsafe.alloc(32, 8));
             return Color.Pow_mem(Color.Init_mem(ptr, r, g, b), 2.2);
         };
         Color.Kelvin = function (K) {
@@ -105,28 +105,28 @@ var Initialize_XRayKernel = function (XRAY) {
             var green;
             var blue;
             if (K >= 6600) {
-                var a = 351.97690566805693;
+                var A = 351.97690566805693;
                 var b = 0.114206453784165;
                 var c = -40.25366309332127;
                 var x = K / 100 - 55;
-                red = a + b * x + c * Math.log(x);
+                red = A + b * x + c * Math.log(x);
             }
             else {
                 red = 255;
             }
             if (K >= 6600) {
-                a = 325.4494125711974;
+                A = 325.4494125711974;
                 b = 0.07943456536662342;
                 c = -28.0852963507957;
                 x = K / 100 - 50;
-                green = a + b * x + c * Math.log(x);
+                green = A + b * x + c * Math.log(x);
             }
             else if (K >= 1000) {
-                a = -155.25485562709179;
+                A = -155.25485562709179;
                 b = -0.44596950469579133;
                 c = 104.49216199393888;
                 x = K / 100 - 2;
-                green = a + b * x + c * Math.log(x);
+                green = A + b * x + c * Math.log(x);
             }
             else {
                 green = 0;
@@ -135,11 +135,11 @@ var Initialize_XRayKernel = function (XRAY) {
                 blue = 255;
             }
             else if (K >= 2000) {
-                a = -254.76935184120902;
+                A = -254.76935184120902;
                 b = 0.8274096064007395;
                 c = 115.67994401066147;
                 x = K / 100 - 10;
-                blue = a + b * x + c * Math.log(x);
+                blue = A + b * x + c * Math.log(x);
             }
             else {
                 blue = 0;
@@ -155,7 +155,7 @@ var Initialize_XRayKernel = function (XRAY) {
                 r: unsafe._mem_f64[(SELF + 8) >> 3],
                 g: unsafe._mem_f64[(SELF + 16) >> 3],
                 b: unsafe._mem_f64[(SELF + 24) >> 3],
-                a: 1.0
+                A: 1.0
             };
         };
         Color.RGB = function (SELF) {
@@ -176,7 +176,7 @@ var Initialize_XRayKernel = function (XRAY) {
                 r: _d[0],
                 g: _d[1],
                 b: _d[2],
-                a: 255
+                A: 255
             };
         };
         Color.RGBA64 = function (SELF) {
@@ -184,154 +184,154 @@ var Initialize_XRayKernel = function (XRAY) {
                 r: Math.round(Math.max(0, Math.min(65535, unsafe._mem_f64[(SELF + 8) >> 3] * 65535))),
                 g: Math.round(Math.max(0, Math.min(65535, unsafe._mem_f64[(SELF + 16) >> 3] * 65535))),
                 b: Math.round(Math.max(0, Math.min(65535, unsafe._mem_f64[(SELF + 24) >> 3] * 65535))),
-                a: 65535
+                A: 65535
             };
         };
-        Color.Add = function (a, b) { return rgb(a.r + b.r, a.g + b.g, a.b + b.b); };
-        Color.Add_mem = function (a, b, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = unsafe._mem_f64[(a + 8) >> 3] + unsafe._mem_f64[(b + 8) >> 3];
-                unsafe._mem_f64[(c + 16) >> 3] = unsafe._mem_f64[(a + 16) >> 3] + unsafe._mem_f64[(b + 16) >> 3];
-                unsafe._mem_f64[(c + 24) >> 3] = unsafe._mem_f64[(a + 24) >> 3] + unsafe._mem_f64[(b + 24) >> 3];
-                return c;
+        Color.Add = function (A, b) { return rgb(A.r + b.r, A.g + b.g, A.b + b.b); };
+        Color.Add_mem = function (A, b, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = unsafe._mem_f64[(A + 8) >> 3] + unsafe._mem_f64[(b + 8) >> 3];
+                unsafe._mem_f64[(C + 16) >> 3] = unsafe._mem_f64[(A + 16) >> 3] + unsafe._mem_f64[(b + 16) >> 3];
+                unsafe._mem_f64[(C + 24) >> 3] = unsafe._mem_f64[(A + 24) >> 3] + unsafe._mem_f64[(b + 24) >> 3];
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, unsafe._mem_f64[(a + 8) >> 3] + unsafe._mem_f64[(b + 8) >> 3], unsafe._mem_f64[(a + 16) >> 3] + unsafe._mem_f64[(b + 16) >> 3], unsafe._mem_f64[(a + 24) >> 3] + unsafe._mem_f64[(b + 24) >> 3]);
+                return Color.Init_mem(ptr, unsafe._mem_f64[(A + 8) >> 3] + unsafe._mem_f64[(b + 8) >> 3], unsafe._mem_f64[(A + 16) >> 3] + unsafe._mem_f64[(b + 16) >> 3], unsafe._mem_f64[(A + 24) >> 3] + unsafe._mem_f64[(b + 24) >> 3]);
             }
         };
-        Color.Sub = function (a, b) { return rgb(a.r - b.r, a.g - b.g, a.b - b.b); };
-        Color.Sub_mem = function (a, b, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = unsafe._mem_f64[(a + 8) >> 3] - unsafe._mem_f64[(b + 8) >> 3];
-                unsafe._mem_f64[(c + 16) >> 3] = unsafe._mem_f64[(a + 16) >> 3] - unsafe._mem_f64[(b + 16) >> 3];
-                unsafe._mem_f64[(c + 24) >> 3] = unsafe._mem_f64[(a + 24) >> 3] - unsafe._mem_f64[(b + 24) >> 3];
-                return c;
+        Color.Sub = function (A, b) { return rgb(A.r - b.r, A.g - b.g, A.b - b.b); };
+        Color.Sub_mem = function (A, b, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = unsafe._mem_f64[(A + 8) >> 3] - unsafe._mem_f64[(b + 8) >> 3];
+                unsafe._mem_f64[(C + 16) >> 3] = unsafe._mem_f64[(A + 16) >> 3] - unsafe._mem_f64[(b + 16) >> 3];
+                unsafe._mem_f64[(C + 24) >> 3] = unsafe._mem_f64[(A + 24) >> 3] - unsafe._mem_f64[(b + 24) >> 3];
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, unsafe._mem_f64[(a + 8) >> 3] - unsafe._mem_f64[(b + 8) >> 3], unsafe._mem_f64[(a + 16) >> 3] - unsafe._mem_f64[(b + 16) >> 3], unsafe._mem_f64[(a + 24) >> 3] - unsafe._mem_f64[(b + 24) >> 3]);
+                return Color.Init_mem(ptr, unsafe._mem_f64[(A + 8) >> 3] - unsafe._mem_f64[(b + 8) >> 3], unsafe._mem_f64[(A + 16) >> 3] - unsafe._mem_f64[(b + 16) >> 3], unsafe._mem_f64[(A + 24) >> 3] - unsafe._mem_f64[(b + 24) >> 3]);
             }
         };
-        Color.Mul = function (a, b) { return rgb(a.r * b.r, a.g * b.g, a.b * b.b); };
-        Color.Mul2 = function (a, b) {
-            return new Color3(unsafe._mem_f64[(a + 8) >> 3] * b.r, unsafe._mem_f64[(a + 16) >> 3] * b.g, unsafe._mem_f64[(a + 24) >> 3] * b.b);
+        Color.Mul = function (A, b) { return rgb(A.r * b.r, A.g * b.g, A.b * b.b); };
+        Color.Mul2 = function (A, b) {
+            return new Color3(unsafe._mem_f64[(A + 8) >> 3] * b.r, unsafe._mem_f64[(A + 16) >> 3] * b.g, unsafe._mem_f64[(A + 24) >> 3] * b.b);
         };
-        Color.Mul_mem = function (a, b, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = unsafe._mem_f64[(a + 8) >> 3] * unsafe._mem_f64[(b + 8) >> 3];
-                unsafe._mem_f64[(c + 16) >> 3] = unsafe._mem_f64[(a + 16) >> 3] * unsafe._mem_f64[(b + 16) >> 3];
-                unsafe._mem_f64[(c + 24) >> 3] = unsafe._mem_f64[(a + 24) >> 3] * unsafe._mem_f64[(b + 24) >> 3];
-                return c;
+        Color.Mul_mem = function (A, b, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = unsafe._mem_f64[(A + 8) >> 3] * unsafe._mem_f64[(b + 8) >> 3];
+                unsafe._mem_f64[(C + 16) >> 3] = unsafe._mem_f64[(A + 16) >> 3] * unsafe._mem_f64[(b + 16) >> 3];
+                unsafe._mem_f64[(C + 24) >> 3] = unsafe._mem_f64[(A + 24) >> 3] * unsafe._mem_f64[(b + 24) >> 3];
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, unsafe._mem_f64[(a + 8) >> 3] * unsafe._mem_f64[(b + 8) >> 3], unsafe._mem_f64[(a + 16) >> 3] * unsafe._mem_f64[(b + 16) >> 3], unsafe._mem_f64[(a + 24) >> 3] * unsafe._mem_f64[(b + 24) >> 3]);
+                return Color.Init_mem(ptr, unsafe._mem_f64[(A + 8) >> 3] * unsafe._mem_f64[(b + 8) >> 3], unsafe._mem_f64[(A + 16) >> 3] * unsafe._mem_f64[(b + 16) >> 3], unsafe._mem_f64[(A + 24) >> 3] * unsafe._mem_f64[(b + 24) >> 3]);
             }
         };
-        Color.MulScalar = function (a, f) { return rgb(a.r * f, a.g * f, a.b * f); };
-        Color.MulScalar2 = function (a, f) {
-            return new Color3(unsafe._mem_f64[(a + 8) >> 3] * f, unsafe._mem_f64[(a + 16) >> 3] * f, unsafe._mem_f64[(a + 24) >> 3] * f);
+        Color.MulScalar = function (A, f) { return rgb(A.r * f, A.g * f, A.b * f); };
+        Color.MulScalar2 = function (A, f) {
+            return new Color3(unsafe._mem_f64[(A + 8) >> 3] * f, unsafe._mem_f64[(A + 16) >> 3] * f, unsafe._mem_f64[(A + 24) >> 3] * f);
         };
-        Color.MulScalar_mem = function (a, f, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = unsafe._mem_f64[(a + 8) >> 3] * f;
-                unsafe._mem_f64[(c + 16) >> 3] = unsafe._mem_f64[(a + 16) >> 3] * f;
-                unsafe._mem_f64[(c + 24) >> 3] = unsafe._mem_f64[(a + 24) >> 3] * f;
-                return c;
+        Color.MulScalar_mem = function (A, f, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = unsafe._mem_f64[(A + 8) >> 3] * f;
+                unsafe._mem_f64[(C + 16) >> 3] = unsafe._mem_f64[(A + 16) >> 3] * f;
+                unsafe._mem_f64[(C + 24) >> 3] = unsafe._mem_f64[(A + 24) >> 3] * f;
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, unsafe._mem_f64[(a + 8) >> 3] * f, unsafe._mem_f64[(a + 16) >> 3] * f, unsafe._mem_f64[(a + 24) >> 3] * f);
+                return Color.Init_mem(ptr, unsafe._mem_f64[(A + 8) >> 3] * f, unsafe._mem_f64[(A + 16) >> 3] * f, unsafe._mem_f64[(A + 24) >> 3] * f);
             }
         };
-        Color.DivScalar = function (a, f) { return rgb(a.r / f, a.g / f, a.b / f); };
-        Color.DivScalar_mem = function (a, f, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = unsafe._mem_f64[(a + 8) >> 3] / f;
-                unsafe._mem_f64[(c + 16) >> 3] = unsafe._mem_f64[(a + 16) >> 3] / f;
-                unsafe._mem_f64[(c + 24) >> 3] = unsafe._mem_f64[(a + 24) >> 3] / f;
-                return c;
+        Color.DivScalar = function (A, f) { return rgb(A.r / f, A.g / f, A.b / f); };
+        Color.DivScalar_mem = function (A, f, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = unsafe._mem_f64[(A + 8) >> 3] / f;
+                unsafe._mem_f64[(C + 16) >> 3] = unsafe._mem_f64[(A + 16) >> 3] / f;
+                unsafe._mem_f64[(C + 24) >> 3] = unsafe._mem_f64[(A + 24) >> 3] / f;
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, unsafe._mem_f64[(a + 8) >> 3] / f, unsafe._mem_f64[(a + 16) >> 3] / f, unsafe._mem_f64[(a + 24) >> 3] / f);
+                return Color.Init_mem(ptr, unsafe._mem_f64[(A + 8) >> 3] / f, unsafe._mem_f64[(A + 16) >> 3] / f, unsafe._mem_f64[(A + 24) >> 3] / f);
             }
         };
-        Color.Min = function (a, b) { return rgb(Math.min(a.r, b.r), Math.min(a.g, b.g), Math.min(a.b, b.b)); };
-        Color.Min_mem = function (a, b, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = Math.min(unsafe._mem_f64[(a + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]);
-                unsafe._mem_f64[(c + 16) >> 3] = Math.min(unsafe._mem_f64[(a + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]);
-                unsafe._mem_f64[(c + 24) >> 3] = Math.min(unsafe._mem_f64[(a + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]);
-                return c;
+        Color.Min = function (A, b) { return rgb(Math.min(A.r, b.r), Math.min(A.g, b.g), Math.min(A.b, b.b)); };
+        Color.Min_mem = function (A, b, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = Math.min(unsafe._mem_f64[(A + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]);
+                unsafe._mem_f64[(C + 16) >> 3] = Math.min(unsafe._mem_f64[(A + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]);
+                unsafe._mem_f64[(C + 24) >> 3] = Math.min(unsafe._mem_f64[(A + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]);
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, Math.min(unsafe._mem_f64[(a + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]), Math.min(unsafe._mem_f64[(a + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]), Math.min(unsafe._mem_f64[(a + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]));
+                return Color.Init_mem(ptr, Math.min(unsafe._mem_f64[(A + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]), Math.min(unsafe._mem_f64[(A + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]), Math.min(unsafe._mem_f64[(A + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]));
             }
         };
-        Color.Max = function (a, b) { return rgb(Math.max(a.r, b.r), Math.max(a.g, b.g), Math.max(a.b, b.b)); };
-        Color.Max_mem = function (a, b, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = Math.max(unsafe._mem_f64[(a + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]);
-                unsafe._mem_f64[(c + 16) >> 3] = Math.max(unsafe._mem_f64[(a + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]);
-                unsafe._mem_f64[(c + 24) >> 3] = Math.max(unsafe._mem_f64[(a + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]);
-                return c;
-            }
-            else {
-                var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, Math.max(unsafe._mem_f64[(a + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]), Math.max(unsafe._mem_f64[(a + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]), Math.max(unsafe._mem_f64[(a + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]));
-            }
-        };
-        Color.MinComponent = function (a) { return Math.min(Math.min(a.r, a.g), a.b); };
-        Color.MinComponent_mem = function (a) {
-            return Math.min(Math.min(unsafe._mem_f64[(a + 8) >> 3], unsafe._mem_f64[(a + 16) >> 3]), unsafe._mem_f64[(a + 24) >> 3]);
-        };
-        Color.MaxComponent = function (a) { return Math.max(Math.max(a.r, a.g), a.b); };
-        Color.MaxComponent_mem = function (a) {
-            return Math.max(Math.max(unsafe._mem_f64[(a + 8) >> 3], unsafe._mem_f64[(a + 16) >> 3]), unsafe._mem_f64[(a + 24) >> 3]);
-        };
-        Color.Pow = function (a, f) { return rgb(Math.pow(a.r, f), Math.pow(a.g, f), Math.pow(a.b, f)); };
-        Color.Pow_mem = function (a, f, c) {
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = Math.pow(unsafe._mem_f64[(a + 8) >> 3], f);
-                unsafe._mem_f64[(c + 16) >> 3] = Math.pow(unsafe._mem_f64[(a + 16) >> 3], f);
-                unsafe._mem_f64[(c + 24) >> 3] = Math.pow(unsafe._mem_f64[(a + 24) >> 3], f);
-                return c;
+        Color.Max = function (A, b) { return rgb(Math.max(A.r, b.r), Math.max(A.g, b.g), Math.max(A.b, b.b)); };
+        Color.Max_mem = function (A, b, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = Math.max(unsafe._mem_f64[(A + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]);
+                unsafe._mem_f64[(C + 16) >> 3] = Math.max(unsafe._mem_f64[(A + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]);
+                unsafe._mem_f64[(C + 24) >> 3] = Math.max(unsafe._mem_f64[(A + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]);
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
-                return Color.Init_mem(ptr, Math.pow(unsafe._mem_f64[(a + 8) >> 3], f), Math.pow(unsafe._mem_f64[(a + 16) >> 3], f), Math.pow(unsafe._mem_f64[(a + 24) >> 3], f));
+                return Color.Init_mem(ptr, Math.max(unsafe._mem_f64[(A + 8) >> 3], unsafe._mem_f64[(b + 8) >> 3]), Math.max(unsafe._mem_f64[(A + 16) >> 3], unsafe._mem_f64[(b + 16) >> 3]), Math.max(unsafe._mem_f64[(A + 24) >> 3], unsafe._mem_f64[(b + 24) >> 3]));
             }
         };
-        Color.Mix = function (a, b, pct) {
-            var _a = Color.MulScalar(a, 1 - pct);
+        Color.MinComponent = function (A) { return Math.min(Math.min(A.r, A.g), A.b); };
+        Color.MinComponent_mem = function (A) {
+            return Math.min(Math.min(unsafe._mem_f64[(A + 8) >> 3], unsafe._mem_f64[(A + 16) >> 3]), unsafe._mem_f64[(A + 24) >> 3]);
+        };
+        Color.MaxComponent = function (A) { return Math.max(Math.max(A.r, A.g), A.b); };
+        Color.MaxComponent_mem = function (A) {
+            return Math.max(Math.max(unsafe._mem_f64[(A + 8) >> 3], unsafe._mem_f64[(A + 16) >> 3]), unsafe._mem_f64[(A + 24) >> 3]);
+        };
+        Color.Pow = function (A, f) { return rgb(Math.pow(A.r, f), Math.pow(A.g, f), Math.pow(A.b, f)); };
+        Color.Pow_mem = function (A, f, C) {
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = Math.pow(unsafe._mem_f64[(A + 8) >> 3], f);
+                unsafe._mem_f64[(C + 16) >> 3] = Math.pow(unsafe._mem_f64[(A + 16) >> 3], f);
+                unsafe._mem_f64[(C + 24) >> 3] = Math.pow(unsafe._mem_f64[(A + 24) >> 3], f);
+                return C;
+            }
+            else {
+                var ptr = Color.initInstance(unsafe.alloc(32, 8));
+                return Color.Init_mem(ptr, Math.pow(unsafe._mem_f64[(A + 8) >> 3], f), Math.pow(unsafe._mem_f64[(A + 16) >> 3], f), Math.pow(unsafe._mem_f64[(A + 24) >> 3], f));
+            }
+        };
+        Color.Mix = function (A, b, pct) {
+            var _a = Color.MulScalar(A, 1 - pct);
             var _b = Color.MulScalar(b, pct);
             return rgb(_a.r + _b.r, _a.g + _b.g, _a.b + _b.b);
         };
-        Color.Mix_mem = function (a, b, pct, c) {
-            var _a = Color.MulScalar_mem(a, 1 - pct);
+        Color.Mix_mem = function (A, b, pct, C) {
+            var _a = Color.MulScalar_mem(A, 1 - pct);
             var _b = Color.MulScalar_mem(b, pct);
-            if (c) {
-                unsafe._mem_f64[(c + 8) >> 3] = unsafe._mem_f64[((_a) + 8) >> 3] + unsafe._mem_f64[((_b) + 8) >> 3];
-                unsafe._mem_f64[(c + 16) >> 3] = unsafe._mem_f64[((_a) + 16) >> 3] + unsafe._mem_f64[((_b) + 16) >> 3];
-                unsafe._mem_f64[(c + 24) >> 3] = unsafe._mem_f64[((_a) + 24) >> 3] + unsafe._mem_f64[((_b) + 24) >> 3];
-                return c;
+            if (C) {
+                unsafe._mem_f64[(C + 8) >> 3] = unsafe._mem_f64[((_a) + 8) >> 3] + unsafe._mem_f64[((_b) + 8) >> 3];
+                unsafe._mem_f64[(C + 16) >> 3] = unsafe._mem_f64[((_a) + 16) >> 3] + unsafe._mem_f64[((_b) + 16) >> 3];
+                unsafe._mem_f64[(C + 24) >> 3] = unsafe._mem_f64[((_a) + 24) >> 3] + unsafe._mem_f64[((_b) + 24) >> 3];
+                return C;
             }
             else {
                 var ptr = Color.initInstance(unsafe.alloc(32, 8));
                 return Color.Init_mem(ptr, unsafe._mem_f64[((_a) + 8) >> 3] + unsafe._mem_f64[((_b) + 8) >> 3], unsafe._mem_f64[((_a) + 16) >> 3] + unsafe._mem_f64[((_b) + 16) >> 3], unsafe._mem_f64[((_a) + 24) >> 3] + unsafe._mem_f64[((_b) + 24) >> 3]);
             }
         };
-        Color.IsEqual = function (a, b) {
-            return unsafe._mem_f64[(a + 8) >> 3] === unsafe._mem_f64[(b + 8) >> 3] && unsafe._mem_f64[(a + 16) >> 3] === unsafe._mem_f64[(b + 16) >> 3] && unsafe._mem_f64[(a + 24) >> 3] === unsafe._mem_f64[(b + 24) >> 3];
+        Color.IsEqual = function (A, b) {
+            return unsafe._mem_f64[(A + 8) >> 3] === unsafe._mem_f64[(b + 8) >> 3] && unsafe._mem_f64[(A + 16) >> 3] === unsafe._mem_f64[(b + 16) >> 3] && unsafe._mem_f64[(A + 24) >> 3] === unsafe._mem_f64[(b + 24) >> 3];
         };
-        Color.IsBlack = function (a) {
-            return Color.IsEqual(a, Color.BLACK);
+        Color.IsBlack = function (A) {
+            return Color.IsEqual(A, Color.BLACK);
         };
-        Color.IsWhite = function (a) {
-            return Color.IsEqual(a, Color.WHITE);
+        Color.IsWhite = function (A) {
+            return Color.IsEqual(A, Color.WHITE);
         };
         Color.Set = function (SELF, r, g, b) {
             unsafe._mem_f64[(SELF + 8) >> 3] = r;
@@ -371,6 +371,9 @@ var Initialize_XRayKernel = function (XRAY) {
         Color.RandomRGBAColor = function () {
             var i = Math.round(Math.random() * Color.RGBAColors.length);
             return Color.RGBAColors[i];
+        };
+        Color.toColor3 = function (SELF) {
+            return new Color3(unsafe._mem_f64[(SELF + 8) >> 3], unsafe._mem_f64[(SELF + 16) >> 3], unsafe._mem_f64[(SELF + 24) >> 3]);
         };
         Color.initInstance = function (SELF) { unsafe._mem_i32[SELF >> 2] = 194603; return SELF; };
         Color.NAME = "Color";
@@ -510,7 +513,6 @@ var Initialize_XRayKernel = function (XRAY) {
         };
         Vector.Normalize_mem = function (a, c) {
             var d = Vector.Length_mem(a);
-            d = d == 0?1:d;
             if (c) {
                 unsafe._mem_f64[(c + 8) >> 3] = unsafe._mem_f64[(a + 8) >> 3] / d;
                 unsafe._mem_f64[(c + 16) >> 3] = unsafe._mem_f64[(a + 16) >> 3] / d;
@@ -1061,7 +1063,7 @@ var Initialize_XRayKernel = function (XRAY) {
             }
             return box;
         };
-        Box.Anchor_mem = function (SELF, anchor, c) {
+        Box.Anchor = function (SELF, anchor, c) {
             var size = Box.Size(SELF);
             var tmp = Vector.Mul_mem(size, anchor);
             free(size);
@@ -1073,17 +1075,11 @@ var Initialize_XRayKernel = function (XRAY) {
             }
             return Vector.Add_mem(unsafe._mem_i32[(SELF + 4) >> 2], c, c);
         };
-        Box.Anchor = function (SELF, anchor) {
-            var size = Box.Size(SELF);
-            return new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2]).add(size.mul(anchor));
-        };
         Box.Center = function (SELF) {
-            //var anchor = Vector.NewVector(0.5, 0.5, 0.5);
-            //return Box.Anchor(SELF, anchor, anchor);
-            var anchor = new Vector3(0.5, 0.5, 0.5);
+            var anchor = Vector.NewVector(0.5, 0.5, 0.5);
             return Box.Anchor(SELF, anchor, anchor);
         };
-        Box.OuterRadius_mem = function (SELF) {
+        Box.OuterRadius = function (SELF) {
             var center = Box.Center(SELF);
             var tmp = Vector.Sub_mem(unsafe._mem_i32[(SELF + 4) >> 2], center);
             var len = Vector.Length_mem(tmp);
@@ -1091,26 +1087,15 @@ var Initialize_XRayKernel = function (XRAY) {
             free(tmp);
             return len;
         };
-        Box.OuterRadius = function (SELF) {
-            var center = Box.Center(SELF);
-            return new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2]).sub(center).length();
-        };
-        Box.InnerRadius_mem = function (SELF) {
+        Box.InnerRadius = function (SELF) {
             var center = Box.Center(SELF);
             var tmp = Vector.Sub_mem(center, unsafe._mem_i32[(SELF + 4) >> 2]);
             var result = Vector.MaxComponent_mem(tmp);
             free(tmp);
             return result;
         };
-        Box.InnerRadius = function (SELF) {
-            var center = Box.Center(SELF);
-            return center.sub(new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2])).maxComponent();
-        };
-        Box.Size_mem = function (SELF) {
-            return Vector.Sub_mem(unsafe._mem_i32[(SELF + 8) >> 2], unsafe._mem_i32[(SELF + 4) >> 2]);
-        };
         Box.Size = function (SELF) {
-            return new Vector3.read(unsafe._mem_i32[(SELF + 8) >> 2]).sub(new Vector3().read(unsafe._mem_i32[(SELF + 4) >> 2]));
+            return Vector.Sub_mem(unsafe._mem_i32[(SELF + 8) >> 2], unsafe._mem_i32[(SELF + 4) >> 2]);
         };
         Box.Extend = function (SELF, b) {
             var min = unsafe._mem_i32[(SELF + 4) >> 2];
@@ -1724,6 +1709,34 @@ var Initialize_XRayKernel = function (XRAY) {
         Ray.prototype.coneBounce = function (theta, u, v, c) {
             return new Ray(this.origin, Utils.Cone(this.direction, theta, u, v));
         };
+        Ray.prototype.bounce2 = function (info, p, u, v) {
+            var n = info.Ray;
+            F;
+            var material = info.Material;
+            var n1 = 1.0;
+            var n2 = unsafe._mem_f64[(material + 40) >> 3];
+            var gloss = unsafe._mem_f64[(material + 48) >> 3];
+            var transparent = unsafe._mem_u8[(material + 72) >> 0];
+            if (info.Inside) {
+                var _n1 = n1;
+                n1 = n2;
+                n2 = _n1;
+            }
+            if (p < n.reflectance(this, n1, n2)) {
+                var reflected = n.reflect(this);
+                var ray = reflected.coneBounce(gloss, u, v);
+                return { ray: ray, reflected: true };
+            }
+            else if (transparent) {
+                var refracted = n.Refract(this, n1, n2);
+                var ray = refracted.coneBounce(gloss, u, v);
+                return { ray: ray, reflected: true };
+            }
+            else {
+                var ray = n.weightedBounce(u, v);
+                return { ray: ray, reflected: false };
+            }
+        };
         Ray.prototype.bounce = function (info, u, v, bounceType) {
             var n = info.Ray;
             var material = info.Material;
@@ -1797,7 +1810,7 @@ var Initialize_XRayKernel = function (XRAY) {
             return SELF;
         };
         Shape.Type_impl = function (SELF) {
-            return ShapeType.UNKNOWN;
+            throw ShapeType.UNKNOWN;
         };
         Shape.ToJSON_impl = function (SELF) {
             throw "Pure: Shape.ToJSON()";
@@ -2141,7 +2154,7 @@ var Initialize_XRayKernel = function (XRAY) {
             return Cube.init(Cube.initInstance(unsafe.alloc(24, 4)), min, max, material, box);
         };
         Cube.Type_impl = function (SELF) {
-            return ShapeType.CUBE;
+            throw ShapeType.CUBE;
         };
         Cube.ToJSON_impl = function (SELF) {
             return {
@@ -2480,16 +2493,16 @@ var Initialize_XRayKernel = function (XRAY) {
             configurable: true
         });
         Triangle.init = function (SELF, v1, v2, v3, n1, n2, n3, t1, t2, t3, material) {
-            if (v1 === void 0) { v1 = 0; }
-            if (v2 === void 0) { v2 = 0; }
-            if (v3 === void 0) { v3 = 0; }
-            if (n1 === void 0) { n1 = 0; }
-            if (n2 === void 0) { n2 = 0; }
-            if (n3 === void 0) { n3 = 0; }
-            if (t1 === void 0) { t1 = 0; }
-            if (t2 === void 0) { t2 = 0; }
-            if (t3 === void 0) { t3 = 0; }
-            if (material === void 0) { material = 0; }
+            if (v1 === void 0) { v1 = -1; }
+            if (v2 === void 0) { v2 = -1; }
+            if (v3 === void 0) { v3 = -1; }
+            if (n1 === void 0) { n1 = -1; }
+            if (n2 === void 0) { n2 = -1; }
+            if (n3 === void 0) { n3 = -1; }
+            if (t1 === void 0) { t1 = -1; }
+            if (t2 === void 0) { t2 = -1; }
+            if (t3 === void 0) { t3 = -1; }
+            if (material === void 0) { material = -1; }
             unsafe._mem_i32[(SELF + 8) >> 2] = v1;
             unsafe._mem_i32[(SELF + 12) >> 2] = v2;
             unsafe._mem_i32[(SELF + 16) >> 2] = v3;
@@ -2779,8 +2792,8 @@ var Initialize_XRayKernel = function (XRAY) {
             return Mesh.init(ptr, triangles);
         };
         Mesh.dirty = function (SELF) {
-            unsafe._mem_i32[(SELF + 12) >> 2] = 0;
-            unsafe._mem_i32[(SELF + 16) >> 2] = 0;
+            unsafe._mem_i32[(SELF + 12) >> 2] = null;
+            unsafe._mem_i32[(SELF + 16) >> 2] = null;
         };
         Mesh.prototype.Copy = function (SELF) {
             var numTriangles = unsafe._mem_i32[(unsafe._mem_i32[(SELF + 8) >> 2]) >> 2];
@@ -3101,7 +3114,7 @@ var Initialize_XRayKernel = function (XRAY) {
             var right = 0;
             for (var i = 0; i < unsafe._mem_i32[(SELF + 20) >> 2]; i++) {
                 var shape = unsafe._mem_i32[((unsafe._mem_i32[(SELF + 16) >> 2]) + 4 + (4 * i)) >> 2];
-                var box = Shape.BoundingBox(shape);
+                var box = unsafe._mem_i32[(shape + 48) >> 2];
                 var lr = Box.Partition(box, axis, point);
                 if (lr.left) {
                     left++;
@@ -3157,7 +3170,7 @@ var Initialize_XRayKernel = function (XRAY) {
             var count = 0;
             for (var i = 0; i < unsafe._mem_i32[(SELF + 20) >> 2]; i++) {
                 var shape = unsafe._mem_i32[((unsafe._mem_i32[(SELF + 16) >> 2]) + 4 + (4 * i)) >> 2];
-                var box = Shape.BoundingBox(shape);
+                var box = unsafe._mem_i32[(shape + 48) >> 2];
                 _xs[count] = unsafe._mem_f64[((unsafe._mem_i32[(box + 4) >> 2]) + 8) >> 3];
                 _ys[count] = unsafe._mem_f64[((unsafe._mem_i32[(box + 4) >> 2]) + 16) >> 3];
                 _zs[count] = unsafe._mem_f64[((unsafe._mem_i32[(box + 4) >> 2]) + 24) >> 3];
@@ -3449,6 +3462,79 @@ var Initialize_XRayKernel = function (XRAY) {
             unsafe._mem_i32[(SELF + 44) >> 2] = (unsafe._mem_i32[(SELF + 44) >> 2] + 1);
             return Tree.Intersect(unsafe._mem_i32[(SELF + 40) >> 2], r);
         };
+        Scene.Sample = function (SELF, r, emission, samples, depth) {
+            if (depth > this.MaxBounces) {
+                return new Color3();
+            }
+            var hit = Scene.Intersect(SELF, r);
+            if (!hit.Ok()) {
+                return new Color3(0, 0, 0);
+            }
+            var info = hit.Info(r);
+            var result = new Color3();
+            var material = info.Material;
+            var color = Color.toColor3(unsafe._mem_i32[(material + 4) >> 2]);
+            var tint = unsafe._mem_f64[(material + 56) >> 3];
+            if (emission) {
+                var emittance = unsafe._mem_f64[(material + 32) >> 3];
+                if (emittance > 0) {
+                    var __f = unsafe._mem_f64[(material + 32) >> 3] * samples;
+                    var tmp = color.mulScalar(__f);
+                    result = result.add(tmp);
+                }
+            }
+            var n = Math.round(Math.sqrt(samples));
+            for (var u = 0; u < n; u++) {
+                for (var v = 0; v < n; v++) {
+                    var p = Math.random();
+                    var fu = (u + Math.random()) / n;
+                    var fv = (v + Math.random()) / n;
+                    var bounce = r.bounce2(info, p, fu, fv);
+                    var indirect = Scene.Sample(SELF, bounce.ray, bounce.reflected, 1, depth + 1);
+                    if (bounce.reflected) {
+                        var tinted = indirect.mix(color.mul(indirect), tint);
+                        result = result.add(tinted);
+                    }
+                    else {
+                        var direct = Scene.DirectLight(info.ray);
+                        result = result.add(color.mul(direct.add(indirect)));
+                    }
+                }
+            }
+            return result.divScalar(n * n);
+        };
+        Scene.Shadow = function (SELF, r, light, max) {
+            var hit = Scene.Intersect(SELF, r);
+            return hit.shape != light && hit.T < max;
+        };
+        Scene.DirectLight = function (SELF, n) {
+            var nLights = unsafe._mem_i32[(SELF + 36) >> 2] | 0;
+            if (nLights == 0) {
+                return new Color3();
+            }
+            var color = new Color3();
+            var self = this;
+            var i = 0;
+            var lights = unsafe._mem_i32[(SELF + 32) >> 2];
+            for (; i < nLights; i++) {
+                var light = unsafe._mem_i32[(lights + 4 + (4 * i)) >> 2];
+                var p = Vector3.RandomUnitVector();
+                var d = p.sub(n.origin);
+                var lr = new Ray(n.origin, d.normalize());
+                var diffuse = lr.direction.dot(n.direction);
+                if (diffuse <= 0) {
+                    continue;
+                }
+                var distance = d.length();
+                if (Scene.Shadow(lr, light, distance)) {
+                    continue;
+                }
+                var material = Material.MaterialAt(light, p);
+                var m = unsafe._mem_f64[(material + 32) >> 3] * diffuse;
+                color = color.add(Color.MulScalar2(unsafe._mem_i32[(material + 4) >> 2], m));
+            }
+            return color.divScalar(this.lights.length);
+        };
         Scene.initInstance = function (SELF) { unsafe._mem_i32[SELF >> 2] = 237222; return SELF; };
         Scene.NAME = "Scene";
         Scene.SIZE = 48;
@@ -3461,14 +3547,18 @@ var Initialize_XRayKernel = function (XRAY) {
     var MasterScene = (function () {
         function MasterScene(color) {
             this.color = color;
-            MasterScene.defaultMaterial = Material.DiffuseMaterial(Color.HexColor(0xFF0000));
-            //this.resetMemoryOffset = Atomics.load(unsafe._mem_i32, 1);
             this.scenePtr = Scene.NewScene(color);
             this.shapes = [];
             this.lights = [];
         }
         MasterScene.prototype.setClearColor = function (color) {
             Color.HexColor(color, unsafe._mem_i32[((this.scenePtr) + 4) >> 2]);
+        };
+        MasterScene.prototype.Clear = function () {
+            this.scenePtr = Scene.NewScene(this.color);
+            unsafe._mem_i32[((this.scenePtr) + 40) >> 2] = 0;
+            this.shapes = [];
+            this.lights = [];
         };
         MasterScene.prototype.AddDebugScene = function () {
             var wall = Material.GlossyMaterial(Color.HexColor(0xFCFAE1), 1.5, Utils.Radians(10));
@@ -3483,15 +3573,6 @@ var Initialize_XRayKernel = function (XRAY) {
             this.shapes.push(shape);
             if (unsafe._mem_f64[((Shape.MaterialAt(shape, Vector.ZERO)) + 32) >> 3] > 0) {
                 this.lights.push(shape);
-            }
-        };
-        MasterScene.prototype.Clear = function () {
-            if(this.scenePtr) {
-                //Atomics.store(unsafe._mem_i32, 1, this.resetMemoryOffset);
-                this.scenePtr = Scene.NewScene(this.color);
-                unsafe._mem_i32[(this.scenePtr + 40) >> 2] = 0;
-                this.shapes = [];
-                this.lights = [];
             }
         };
         MasterScene.prototype.Commit = function () {
@@ -3781,11 +3862,11 @@ var Initialize_XRayKernel = function (XRAY) {
             if (nLights == 0) {
                 return new Color3();
             }
-            var shapes = unsafe._mem_i32[(scene + 24) >> 2];
+            var lights = unsafe._mem_i32[(scene + 32) >> 2];
             if (this.LightMode == LightMode.LightModeAll) {
                 var result = new Color3();
                 for (var i = 0; i < nLights; i++) {
-                    var light = unsafe._mem_i32[((unsafe._mem_i32[(scene + 32) >> 2]) + 4 + (4 * i)) >> 2];
+                    var light = unsafe._mem_i32[(lights + 4 + (4 * i)) >> 2];
                     result.add(this.sampleLight(scene, n, light));
                 }
                 return result;
@@ -3803,7 +3884,7 @@ var Initialize_XRayKernel = function (XRAY) {
             switch (Shape.Type(light)) {
                 case ShapeType.SPHERE:
                     radius = unsafe._mem_f64[(light + 16) >> 3];
-                    center = new Vector3().read(unsafe._mem_i32[(light + 8) >> 2]);
+                    center = unsafe._mem_i32[(light + 8) >> 2];
                     break;
                 default:
                     var box = Shape.BoundingBox(light);
@@ -3811,8 +3892,8 @@ var Initialize_XRayKernel = function (XRAY) {
                     center = Box.Center(box);
                     break;
             }
-            //var _center = new Vector3().read(center);
-            var _center = center;
+            var _center = new Vector3().read(center);
+            free(center);
             var point = _center;
             if (this.SoftShadows) {
                 var x = void 0;
@@ -3832,7 +3913,7 @@ var Initialize_XRayKernel = function (XRAY) {
                     }
                 }
             }
-            var ray = new Ray(n.origin, point.sub(n.origin));
+            var ray = new Ray(n.origin, point.sub(n.origin).normalize());
             var diffuse = ray.direction.dot(n.direction);
             if (diffuse <= 0) {
                 return new Color3();
@@ -3953,9 +4034,6 @@ var Initialize_XRayKernel = function (XRAY) {
         };
         Vector3.prototype.minComponent = function () {
             return Math.min(Math.min(this.x, this.y), this.z);
-        };
-        Vector3.prototype.maxComponent = function () {
-            return Math.max(Math.max(this.x, this.y), this.z);
         };
         Vector3.prototype.reflect = function (i) {
             return i.sub(this.mulScalar(2 * this.dot(i)));

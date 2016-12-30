@@ -31,7 +31,8 @@ var Editor = function () {
 
 		//XRay
 
-		xrayStateChanged: new Signal(),
+		xrayViewStateChanged: new Signal(),
+		xrayTraceStateChanged: new Signal(),
 		xrayUpdateScene: new Signal(),
 
 		// actions

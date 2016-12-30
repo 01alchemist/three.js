@@ -30,7 +30,7 @@ THREE.XRayRenderer = function (parameters) {
 	var cameraSamples = -1;
 	var hitSamples = 1;
 	var bounces = 4;
-	var targetIterations = 10000;
+	var targetIterations = 1000;
 	var blockIterations = 1;
 
 	var maxWidth = 1920;
@@ -44,6 +44,7 @@ THREE.XRayRenderer = function (parameters) {
 
 	//Internals
 	var _traceState = false;
+	var _viewState = false;
 
 	_super.setSize = this.setSize;
 
@@ -129,6 +130,10 @@ THREE.XRayRenderer = function (parameters) {
 	 */
 	this.toggleGIView = function (newValue) {
 		canvas.style.display = newValue ? "" : "none";
+		_viewState = newValue;
+	};
+
+	this.toggleTrace = function (newValue) {
 		_traceState = newValue;
 		if (_traceState) {
 			traceManager.restart();
@@ -136,7 +141,7 @@ THREE.XRayRenderer = function (parameters) {
 			traceManager.stop();
 			traceManager.clear();
 		}
-	}
+	};
 
 	this.initialize = function (maxMemory) {
 
@@ -161,7 +166,7 @@ THREE.XRayRenderer = function (parameters) {
         canvas.style.pointerEvents = "none";
         container.style.border = "1px solid #C58F33";
         container.style.display = "block";
-        context = canvas.getContext('2d');
+        context = canvas.getContext('2d', {alpha:false});
         imageData = context.getImageData(0, 0, width, height);
 
         container.width = width;
@@ -171,6 +176,8 @@ THREE.XRayRenderer = function (parameters) {
         container.style.position = "absolute";
         container.style.left = xOffset + "px";
         container.style.top = yOffset + "px";
+
+        this.toggleGIView(false);
 
         container.appendChild(canvas);
         this.domElement.parentElement.appendChild(container);
@@ -192,26 +199,10 @@ THREE.XRayRenderer = function (parameters) {
 			cameraSamples: cameraSamples,
 			hitSamples: hitSamples,
 			bounces: bounces,
-			maxLoop: targetIterations
+			iterations: targetIterations
 		});
 
-		var col = width / bucketSize;
-		var row = height / bucketSize;
-
-		for (var j = 0; j < row; j++) {
-			for (var i = 0; i < col; i++) {
-				traceManager.add(
-					new XRAY.TraceJob({
-						id: j + "_" + i,
-						blockIterations: blockIterations,
-						width: bucketSize,
-						height: bucketSize,
-						xoffset: i * bucketSize,
-						yoffset: j * bucketSize
-					})
-				);
-			}
-		}
+		updateRenderJobs();
 
 		traceManager.updatePixels = updatePixelsRect.bind(this);
 		traceManager.updateIndicator = updateIndicator.bind(this);
@@ -229,7 +220,9 @@ THREE.XRayRenderer = function (parameters) {
 			timeoutid = setTimeout(function () {
 				if (_traceState) {
 					traceManager.restart();
-					canvas.style.display = "";
+					if(_viewState) {
+                        canvas.style.display = "";
+                    }
 				}
 			}, 500);
 		});
@@ -255,6 +248,40 @@ THREE.XRayRenderer = function (parameters) {
 		traceManager.clear();
     };
 
+    function updateRenderJobs(){
+
+        traceManager.clearJobs();
+
+        var widthRemainder = width % bucketSize;
+		var heightRemainder = height % bucketSize;
+		var col = Math.ceil(width / bucketSize);
+		var row = Math.ceil(height / bucketSize);
+
+		for (var j = 0; j < row; j++) {
+
+		    let h = j == row - 1 ? heightRemainder : bucketSize;
+
+			for (var i = 0; i < col; i++) {
+
+			    let w = i == col - 1 ? widthRemainder : bucketSize;
+
+				traceManager.add(
+					new XRAY.TraceJob({
+						id: j + "_" + i,
+						blockIterations: blockIterations,
+						width: w,
+						height: h,
+						xoffset: i * bucketSize,
+						yoffset: j * bucketSize
+					})
+				);
+
+			}
+
+		}
+
+    }
+
 	function updateRenderer() {
 
 		if (canvas) {
@@ -272,6 +299,8 @@ THREE.XRayRenderer = function (parameters) {
 		if (traceManager) {
 			console.log(`Renderer updated:: width: ${width}, height: ${height}`);
 
+			updateRenderJobs();
+
 			traceManager.update({
 				width: width,
 				height: height
@@ -288,7 +317,6 @@ THREE.XRayRenderer = function (parameters) {
 			for (var x = 0; x < width; x++) {
 
 				var i = y * (width * 4) + (x * 4);
-				var pi = y * (width * 3) + (x * 3);
 				data[i] = 0;
 				data[i + 1] = 0;
 				data[i + 2] = 0;
@@ -299,7 +327,6 @@ THREE.XRayRenderer = function (parameters) {
 	}
 
 	function updatePixelsRect(rect, pixels) {
-
 		var data = imageData.data;
 		for (var y = rect.yoffset; y < rect.yoffset + rect.height; y++) {
 			for (var x = rect.xoffset; x < rect.xoffset + rect.width; x++) {
@@ -317,7 +344,7 @@ THREE.XRayRenderer = function (parameters) {
 
 	function updateIndicator(rect) {
 
-		var color = randomColor();
+		var color = yellow();
 
 		//top-left
 		fillRect({ x: rect.xoffset, y: rect.yoffset, width: 4, height: 1 }, color);
@@ -353,6 +380,9 @@ THREE.XRayRenderer = function (parameters) {
 		context.putImageData(imageData, 0, 0);
 	}
 
+	function yellow() {
+	    return {r:1, g:186/255, b:27/255};
+    }
 	function randomColor() {
 		return { r: Math.random(), g: Math.random(), b: Math.random() };
 	}

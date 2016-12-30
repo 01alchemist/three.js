@@ -204,16 +204,16 @@ var XRAY = XRAY || {};
         let queue = [];
         let deferredQueue = [];
         let referenceQueue = [];
-        let iterations;
-
+        let totalTime;
+        let startTime;
         let width;
         let height;
         let flags;
         let traceParameters;
         let threads;
         let initCount = 0;
-        let maxLoop = 1;
-        let currentLoop = 0;
+        let iterations = 1;
+        let currentIterations = 0;
         let totalThreads = 0;
         let _initialized = false;
         let _isIterationFinished = true;
@@ -235,11 +235,11 @@ var XRAY = XRAY || {};
 
             width = parameters.width;
             height = parameters.height;
-            maxLoop = parameters.maxLoop;
+            iterations = parameters.iterations;
 
             flags = new Uint8Array(new SharedArrayBuffer(ThreadPool.maxThreads));
             TraceManager.flags = flags;
-            this.pixelMemory = new Uint8Array(new SharedArrayBuffer(maxWidth * maxHeight * 3));
+            this.pixelMemory = new Uint8ClampedArray(new SharedArrayBuffer(maxWidth * maxHeight * 3));
             this.sampleMemory = new Float32Array(new SharedArrayBuffer(4 * maxWidth * maxHeight * 3));
 
             traceParameters = {
@@ -272,8 +272,8 @@ var XRAY = XRAY || {};
 
             width = parameters.width || width;
             height = parameters.height || height;
-            traceParameters.imageWidth = parameters.width || traceParameters.imageWidth;
-            traceParameters.imageHeight = parameters.height || traceParameters.imageHeight;
+            traceParameters.imageWidth = width;
+            traceParameters.imageHeight = height;
             traceParameters.scene = parameters.scene || traceParameters.scene;
 
             if (threads) {
@@ -290,6 +290,10 @@ var XRAY = XRAY || {};
             }
         };
 
+        this.clearJobs = function () {
+            queue = [];
+            referenceQueue = [];
+        }
         this.add = function (job) {
             queue.push(job);
             referenceQueue.push(job);
@@ -440,7 +444,7 @@ var XRAY = XRAY || {};
             if (!stopped) {
                 this.stop();
             }
-            currentLoop = 0;
+            currentIterations = 0;
             _isIterationFinished = false;
             if (flags && this.isAllThreadsFree) {
                 if (_isRenderingFinished) {
@@ -458,9 +462,9 @@ var XRAY = XRAY || {};
         };
 
         this.start = function () {
-            if (currentLoop >= maxLoop || (queue && queue.length == 0 && deferredQueue.length === 0)) {
+            if (currentIterations >= iterations || (queue && queue.length == 0 && deferredQueue.length === 0)) {
                 if (!_isRenderingFinished) {
-                    console.log("Rendering finished");
+                    reportFinish();
                     _isRenderingFinished = true;
                 }
                 return;
@@ -475,6 +479,7 @@ var XRAY = XRAY || {};
 
                 if (_isRenderingFinished) {
                     console.log("Rendering started");
+                    startTime = performance.now();
                     _isRenderingFinished = false;
                 }
 
@@ -511,9 +516,9 @@ var XRAY = XRAY || {};
                 let job = queue.shift();
                 deferredQueue.push(job);
 
-                // if (this.updateIndicator) {
-                //     this.updateIndicator(job.parameters);
-                // }
+                if (this.updateIndicator) {
+                    this.updateIndicator(job.parameters);
+                }
 
                 job.start(thread, function (_job, _thread) {
                     if (!_await) {
@@ -532,15 +537,15 @@ var XRAY = XRAY || {};
 
         this.initDeferredQueue = function () {
 
-            if (currentLoop >= maxLoop || (queue.length == 0 && deferredQueue.length === 0)) {
+            if (currentIterations >= iterations || (queue.length == 0 && deferredQueue.length === 0)) {
                 if (!_isRenderingFinished) {
-                    console.log("Rendering finished");
+                    reportFinish();
                     _isRenderingFinished = true;
                 }
                 return;
             }
 
-            currentLoop++;
+            currentIterations++;
             _isIterationFinished = false;
             deferredQueue.sort(function (a, b) {
                 return b.time - a.time;
@@ -551,6 +556,11 @@ var XRAY = XRAY || {};
 
             //console.time('trace::iteration completed');
             this.start();
+        }
+
+        function reportFinish(){
+            totalTime = performance.now() - startTime;
+            console.log(`Rendering finished (iterations: ${iterations}, time:${Math.round(totalTime/(1000))}s)`);
         }
 
     };
@@ -830,7 +840,7 @@ var XRAY = XRAY || {};
 
         function getTurboLight(src) {
             let _radius;
-            let material = XRAY.Material.LightMaterial(XRAY.Color.HexColor(src.color.getHex()), src.intensity * 10);
+            let material = XRAY.Material.LightMaterial(XRAY.Color.HexColor(src.color.getHex()), src.intensity * 500);
             let shape;
 
             if (src.children.length > 0) {
@@ -842,12 +852,14 @@ var XRAY = XRAY || {};
 
             _radius = _radius ? _radius : 1;
             shape = XRAY.Sphere.NewSphere(XRAY.Vector.NewVector(src.position.x, src.position.y, src.position.z), _radius, material);
+            // shape = XRAY.Sphere.NewSphere(XRAY.Vector.NewVector(), _radius, material);
 
             return shape;
-            //FIXME: Transformed shape is broken
-            // let mat:Matrix = Matrix4.fromTHREEJS(src.matrix.elements);
-            // return TransformedShape.newTransformedShape(sphere, mat);
-            // if (src.matrix.equals(this.identityMatrix)) {
+            //FIXME: Transformed light is broken
+            // let mat = XRAY.Matrix.fromTHREEJS(src.matrix.elements);
+            // return XRAY.TransformedShape.NewTransformedShape(shape, mat);
+            //
+            // if (src.matrix.equals(identityMatrix)) {
             //     return shape;
             // } else {
             //     let mat = XRAY.Matrix.fromTHREEJS(src.matrix.elements);
