@@ -25,13 +25,13 @@ THREE.XRayRenderer = function (parameters) {
 	var view;
 	var traceManager;
 	this.threejsScene = null;
-	var bucketSize = 64;
+	var bucketSize = 32;
 	//Render options
-	var cameraSamples = -1;
-	var hitSamples = 1;
+	var cameraSamples = 4;
+	var hitSamples = 4;
 	var bounces = 4;
 	var targetIterations = 1000;
-	var blockIterations = 1;
+	var blockIterations = 4;
 
 	var maxWidth = 1920;
 	var maxHeight = 1080;

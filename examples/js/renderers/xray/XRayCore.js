@@ -538,7 +538,8 @@ var XRAY = XRAY || {};
 
         this.initDeferredQueue = function () {
 
-            if (currentIterations >= iterations || (queue.length == 0 && deferredQueue.length === 0)) {
+            if (currentIterations >= iterations ||
+                ((queue && queue.length == 0) && (deferredQueue && deferredQueue.length === 0))) {
                 if (!_isRenderingFinished) {
                     reportFinish();
                     _isRenderingFinished = true;
