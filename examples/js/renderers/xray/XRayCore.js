@@ -889,6 +889,27 @@ var XRAY = XRAY || {};
             XRAY.Material.setTint(material, srcMaterial.tint ? srcMaterial.tint : 0);
             XRAY.Material.setGloss(material, srcMaterial.gloss ? srcMaterial.gloss : 0);
             XRAY.Material.setTransparent(material, srcMaterial.transparent ? 1 : 0);
+
+            if(srcMaterial.map){
+                let image = srcMaterial.map.image;
+                let imgData = XRAY.TextureUtils.getImageData(image);
+                let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
+                XRAY.Material.setTexture(material, texture);
+            }
+            if(srcMaterial.bumpMap){
+                let image = srcMaterial.bumpMap.image;
+                let imgData = XRAY.TextureUtils.getImageData(image);
+                let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
+                XRAY.Material.setBumpTexture(material, texture);
+                XRAY.Material.setBumpMultiplier(material, srcMaterial.bumpScale);
+            }
+            if(srcMaterial.roughnessMap){
+                let image = srcMaterial.roughnessMap.image;
+                let imgData = XRAY.TextureUtils.getImageData(image);
+                let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
+                XRAY.Material.setBumpTexture(material, texture);
+            }
+
             material.isLight = false;
         }
         return material;

@@ -25,13 +25,13 @@ THREE.XRayRenderer = function (parameters) {
 	var view;
 	var traceManager;
 	this.threejsScene = null;
-	var bucketSize = 32;
+	var bucketSize = 64;
 	//Render options
-	var cameraSamples = 4;
-	var hitSamples = 4;
-	var bounces = 4;
+	var cameraSamples = -1;
+	var hitSamples = 1;
+	var bounces = 2;
 	var targetIterations = 1000;
-	var blockIterations = 4;
+	var blockIterations = 1;
 
 	var maxWidth = 1920;
 	var maxHeight = 1080;
@@ -392,7 +392,7 @@ THREE.XRayRenderer = function (parameters) {
 		return { r: Math.random(), g: Math.random(), b: Math.random() };
 	}
 
-	XRAY.ThreadPool.overrideMaxThreads = 7;
+	XRAY.ThreadPool.overrideMaxThreads = 8;
 	this.initialize();
 
 };
