@@ -29,7 +29,7 @@ THREE.XRayRenderer = function (parameters) {
 	//Render options
 	var cameraSamples = -1;
 	var hitSamples = 1;
-	var bounces = 2;
+	var bounces = 5;
 	var targetIterations = 1000;
 	var blockIterations = 1;
 
@@ -392,7 +392,7 @@ THREE.XRayRenderer = function (parameters) {
 		return { r: Math.random(), g: Math.random(), b: Math.random() };
 	}
 
-	XRAY.ThreadPool.overrideMaxThreads = 8;
+	XRAY.ThreadPool.overrideMaxThreads = 7;
 	this.initialize();
 
 };
