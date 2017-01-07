@@ -400,7 +400,8 @@ THREE.XRayRenderer = function (parameters) {
 		return { r: Math.random(), g: Math.random(), b: Math.random() };
 	}
 
-	XRAY.ThreadPool.overrideMaxThreads = 1;
+	//Override threads for debugging
+	//XRAY.ThreadPool.overrideMaxThreads = 1;
 	this.initialize();
 
 };
