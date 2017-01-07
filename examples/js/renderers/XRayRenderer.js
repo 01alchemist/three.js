@@ -29,7 +29,7 @@ THREE.XRayRenderer = function (parameters) {
 	//Render options
 	let cameraSamples = -1;
 	let hitSamples = 1;
-	let bounces = 1;
+	let bounces = 4;
 	let targetIterations = 1000;
 	let blockIterations = 1;
 

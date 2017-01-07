@@ -92,14 +92,23 @@
 				scene.add( ambient );
 
 				var pointLight = new THREE.PointLight( 0xffeedd, 10, 300);
-				pointLight.position.set( 0, 199, 100);
+				pointLight.position.set( -20, 100, 100);
 				scene.add( pointLight );
 
+				var size = 200;
+				var geometry = new THREE.BoxBufferGeometry(50,1,50);
+				var material = new THREE.MeshStandardMaterial({color: 0xFFFFFF, emissive:0xFFFFFF});
+				material.intensity = 10;
+				//material.ior = 1.5;
+				//material.gloss = XRAY.Utils.Radians(15);
+				var meshlight = new THREE.Mesh(geometry, material);
+				meshlight.position.set(0,size-1,0);
+				meshlight.updateMatrixWorld();
+				scene.add(meshlight);
 
 				//Room
-				var size = 200;
-				var geometry = new THREE.BoxBufferGeometry(size,1,size);
-				var material = new THREE.MeshStandardMaterial({color: 0xffeedd});
+				geometry = new THREE.BoxBufferGeometry(size,1,size);
+				material = new THREE.MeshStandardMaterial({color: 0xffeedd});
 				//material.ior = 1.5;
 				//material.gloss = XRAY.Utils.Radians(15);
 				var ground = new THREE.Mesh(geometry, material);
@@ -121,8 +130,8 @@
 
 				geometry = new THREE.BoxBufferGeometry(1,size,size);
 				material = new THREE.MeshPhongMaterial({color: 0xFF0000});
-				//material.ior = 1.5;
-				//material.gloss = XRAY.Utils.Radians(15);
+				// material.ior = 1.5;
+				material.gloss = XRAY.Utils.Radians(15);
 				var left = new THREE.Mesh(geometry, material);
 				left.position.set(-size/2,size/2,0);
 				left.castShadow = false;

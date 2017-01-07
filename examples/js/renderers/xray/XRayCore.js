@@ -887,7 +887,8 @@ var XRAY = XRAY || {};
         let emissiveColor = srcMaterial.emissive.getHex();
         if(emissiveColor > 0){
             let emissiveHSL = srcMaterial.emissive.getHSL();
-            material = XRAY.Material.LightMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()), emissiveHSL.l * 10);
+            let intensity = srcMaterial.intensity ? srcMaterial.intensity : emissiveHSL.l;
+            material = XRAY.Material.LightMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()), intensity * 10);
             material.isLight = true;
         }else {
             material = XRAY.Material.DiffuseMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()));
