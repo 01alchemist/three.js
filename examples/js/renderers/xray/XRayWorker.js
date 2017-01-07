@@ -8,37 +8,37 @@ var XRAY = XRAY || {};
 
 addEventListener('message', onMessageReceived.bind(this), false);
 
-var id;
-var flags;
-var pixelMemory;
-var sampleMemory;
-var camera;
-var scene;
-var sampler;
-var imageWidth;
-var imageHeight;
-var width;
-var height;
-var xoffset;
-var yoffset;
-var samples;
-var _cameraSamples;
-var _absCameraSamples;
-var _hitSamples;
-var bounces;
-var iterations = 1;
-var locked;
-var isLeader;
+let id;
+let flags;
+let pixelMemory;
+let sampleMemory;
+let camera;
+let scene;
+let sampler;
+let imageWidth;
+let imageHeight;
+let width;
+let height;
+let xoffset;
+let yoffset;
+let samples;
+let _cameraSamples;
+let _absCameraSamples;
+let _hitSamples;
+let bounces;
+let iterations = 1;
+let locked;
+let isLeader;
 
-var IDLE = 0;
-var TRACING = 1;
-var TRACED = 2;
-var LOCKING = 3;
-var LOCKED = 4;
+let IDLE = 0;
+let TRACING = 1;
+let TRACED = 2;
+let LOCKING = 3;
+let LOCKED = 4;
 
 function onMessageReceived(e) {
 
-    var data = e.data;
+    let data = e.data;
 
     switch (data.command) {
 
@@ -117,11 +117,6 @@ function onMessageReceived(e) {
             yoffset = e.data.yoffset;
             _absCameraSamples = Math.round(Math.abs(_cameraSamples));
 
-            if (e.data.camera) {
-                // camera.updateFromJson(e.data.camera);
-                ////console.log(e.data.camera);
-            }
-
             iterations = e.data.init_iterations || 0;
 
             if (locked) {
@@ -130,7 +125,7 @@ function onMessageReceived(e) {
             }
 
             if (iterations > 0 && e.data.blockIterations) {
-                for (var i = 0; i < e.data.blockIterations; i++) {
+                for (let i = 0; i < e.data.blockIterations; i++) {
                     if (Atomics.load(flags, id) === LOCKING) {//thread locked
                         lock();
                         return;
@@ -171,9 +166,9 @@ function lock() {
 function run() {
 
     iterations++;
-    var hitSamples = _hitSamples;
-    var cameraSamples = _cameraSamples;
-    var absCameraSamples = _absCameraSamples;
+    let hitSamples = _hitSamples;
+    let cameraSamples = _cameraSamples;
+    let absCameraSamples = _absCameraSamples;
     if (iterations == 1) {
         hitSamples = 1;
         cameraSamples = -1;
@@ -181,9 +176,9 @@ function run() {
     }
 
     ////console.time("render");
-    for (var y = yoffset; y < yoffset + height; y++) {
+    for (let y = yoffset; y < yoffset + height; y++) {
 
-        for (var x = xoffset; x < xoffset + width; x++) {
+        for (let x = xoffset; x < xoffset + width; x++) {
 
             if (Atomics.load(flags, id) === LOCKING) {//thread locked
                 //console.log("exit:3");
@@ -191,17 +186,17 @@ function run() {
                 return;
             }
 
-            var screen_index = (y * (imageWidth * 3)) + (x * 3);
-            // var _x = x - xoffset;
-            // var _y = y - yoffset;
+            let screen_index = (y * (imageWidth * 3)) + (x * 3);
+            // let _x = x - xoffset;
+            // let _y = y - yoffset;
 
-            var c = new XRAY.Color3();
+            let c = new XRAY.Color3();
 
             if (cameraSamples <= 0) {
                 // random subsampling
                 for (let i = 0; i < absCameraSamples; i++) {
-                    var fu = Math.random();
-                    var fv = Math.random();
+                    let fu = Math.random();
+                    let fv = Math.random();
                     let ray = XRAY.Camera.CastRay(camera, x, y, imageWidth, imageHeight, fu, fv);
                     let sample = sampler.sample(scene, ray, true, hitSamples, 1);
                     c = c.add(sample);
@@ -209,11 +204,11 @@ function run() {
                 c = c.divScalar(absCameraSamples);
             } else {
                 // stratified subsampling
-                var n = Math.round(Math.sqrt(cameraSamples));
-                for (var u = 0; u < n; u++) {
-                    for (var v = 0; v < n; v++) {
-                        var fu = (u + 0.5) / n;
-                        var fv = (v + 0.5) / n;
+                let n = Math.round(Math.sqrt(cameraSamples));
+                for (let u = 0; u < n; u++) {
+                    for (let v = 0; v < n; v++) {
+                        let fu = (u + 0.5) / n;
+                        let fv = (v + 0.5) / n;
                         let ray = XRAY.Camera.CastRay(camera, x, y, imageWidth, imageHeight, fu, fv);
                         let sample = sampler.sample(scene, ray, true, hitSamples, 1);
                         c = c.add(sample);
@@ -255,37 +250,4 @@ function updatePixel(color, si) {
 
     color = null;
     delete color;
-}
-
-function checkSamples() {
-    for (var y = yoffset; y < yoffset + height; y++) {
-        for (var x = xoffset; x < xoffset + width; x++) {
-            var si = (y * (imageWidth * 3)) + (x * 3);
-            if (sampleMemory[si] !== 0 &&
-                sampleMemory[si + 1] !== 0 &&
-                sampleMemory[si + 2] !== 0) {
-                return "NOT_OK";
-            }
-        }
-    }
-    return "OK";
-}
-
-function drawColor(i, rgba) {
-
-    pixelMemory[i] = rgba.r;
-    pixelMemory[i + 1] = rgba.g;
-    pixelMemory[i + 2] = rgba.b;
-
-}
-
-function drawPixelInt(i, color) {
-
-    var red = (color >> 16) & 255;
-    var green = (color >> 8) & 255;
-    var blue = color & 255;
-
-    pixelMemory[i] = red;
-    pixelMemory[i + 1] = green;
-    pixelMemory[i + 2] = blue;
 }

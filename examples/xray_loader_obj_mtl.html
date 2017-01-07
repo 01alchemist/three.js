@@ -92,11 +92,11 @@
 
 				var onError = function ( xhr ) { };
 
-				THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+				//THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
 
 				var mtlLoader = new THREE.MTLLoader();
 				mtlLoader.setPath( 'obj/male02/' );
-				mtlLoader.load( 'male02_dds.mtl', function( materials ) {
+				mtlLoader.load( 'male02.mtl', function( materials ) {
 
 					materials.preload();
 
@@ -109,9 +109,12 @@
 						object.matrix = new THREE.Matrix4().makeTranslation(0,-95,0);
 						scene.add( object );
 
-						renderer.initializeRenderer(scene, camera);
-						renderer.toggleTrace(true);
-						renderer.toggleGIView(true);
+						setTimeout(() => {
+							renderer.initializeRenderer(scene, camera);
+							renderer.toggleTrace(true);
+							renderer.toggleGIView(true);
+						}, 1000);
+
 						//renderer.updateCamera(camera);
 						animate();
 					}, onProgress, onError );
