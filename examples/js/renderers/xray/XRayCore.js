@@ -112,11 +112,11 @@ var XRAY = XRAY || {};
         };
 
         this.send = function (data, buffers) {
-            if (navigator.userAgent.indexOf("Firefox") > -1) {
+            // if (navigator.userAgent.indexOf("Firefox") > -1) {
                 instance.postMessage(data);
-            } else {
-                instance.postMessage(data, buffers);
-            }
+            // } else {
+            //     instance.postMessage(data, buffers);
+            // }
         };
 
         this.terminate = function () {
@@ -601,7 +601,7 @@ var XRAY = XRAY || {};
                 this.scene.Clear();
             }
 
-            this.scene.setClearColor(scene.background.getHex());
+            this.scene.setClearColor(scene.background?scene.background.getHex():0);
 
             console.time("Scene builder");
             this.loadChildren(scene);
@@ -610,6 +610,9 @@ var XRAY = XRAY || {};
         };
 
         this.updateCamera = function (camera, ratioX, ratioY, ratioZ) {
+            if(typeof camera == "undefined"){
+                return;
+            }
             if (ratioX === void 0) {
                 ratioX = 1;
             }
@@ -896,21 +899,27 @@ var XRAY = XRAY || {};
             if(srcMaterial.map){
                 let image = srcMaterial.map.image;
                 let imgData = XRAY.TextureUtils.getImageData(image);
-                let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
-                XRAY.Material.setTexture(material, texture);
+                if(imgData) {
+                    let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
+                    XRAY.Material.setTexture(material, texture);
+                }
             }
             if(srcMaterial.bumpMap){
                 let image = srcMaterial.bumpMap.image;
                 let imgData = XRAY.TextureUtils.getImageData(image);
-                let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
-                XRAY.Material.setBumpTexture(material, texture);
-                XRAY.Material.setBumpMultiplier(material, srcMaterial.bumpScale);
+                if(imgData) {
+                    let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
+                    XRAY.Material.setBumpTexture(material, texture);
+                    XRAY.Material.setBumpMultiplier(material, srcMaterial.bumpScale);
+                }
             }
             if(srcMaterial.roughnessMap){
                 let image = srcMaterial.roughnessMap.image;
                 let imgData = XRAY.TextureUtils.getImageData(image);
-                let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
-                XRAY.Material.setBumpTexture(material, texture);
+                if(imgData) {
+                    let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
+                    XRAY.Material.setBumpTexture(material, texture);
+                }
             }
 
             material.isLight = false;

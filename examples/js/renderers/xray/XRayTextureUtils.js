@@ -16,9 +16,13 @@ var XRAY = XRAY || {};
         if(!ctx){
             create2dDrawingContext();
         }
-        ctx.drawImage(image, 0, 0);
-        let pixels = ctx.getImageData(0, 0, image.width, image.height).data;
-        return pixels;
+        if(image instanceof ImageBitmap) {
+            ctx.drawImage(image, 0, 0);
+            let pixels = ctx.getImageData(0, 0, image.width, image.height).data;
+            return pixels;
+        }else{
+            return null;
+        }
     }
 
     XRAY.TextureUtils = TextureUtils

@@ -18,7 +18,7 @@ THREE.XRayRenderer = function (parameters) {
 	//XRay members
 	var initialized = false;
 	var initializing = false;
-	var container;
+	var container = null;
 	var canvas;
 	var context;
 	var imageData;
@@ -60,7 +60,7 @@ THREE.XRayRenderer = function (parameters) {
 		// width = _width //- xOffset;
 		//height = _height //- yOffset;
 
-		updateRenderer();
+		updateRenderer.call(this);
 
 		_super.setSize.call(this, _width, _height, updateStyle);
 
@@ -131,7 +131,7 @@ THREE.XRayRenderer = function (parameters) {
 		}
 	};
 
-	this.initialize = function (maxMemory) {
+	var initialize = function(maxMemory) {
 
 		if (typeof turbo === "undefined") {
 			if (typeof SharedArrayBuffer !== "undefined") {
@@ -142,7 +142,7 @@ THREE.XRayRenderer = function (parameters) {
 			Initialize_XRayKernel(XRAY);
 			setTimeout(this.setupRenderer.bind(this), 0);
 		}
-	};
+	}.bind(this);
 
 	/**
 	 * Setup XRay renderer
@@ -150,29 +150,35 @@ THREE.XRayRenderer = function (parameters) {
 	this.initializeRenderer = function (scene, camera) {
 		if(!initialized && !initializing) {
 			initializing = true;
+			if(!view){
+				this.setupRenderer();
+			}
 			view.setScene(scene);
 			this.setupTracer();
 
 			traceManager.init(function () {
 				console.log("Ready to start");
-				updateCamera(camera);
+				this.updateCamera(camera);
 				if(_traceState){
 					traceManager.start();
                 }
 				initialized = true;
 				initializing = false;
-			});
+			}.bind(this));
 		}else{
-			updateCamera(camera);
-			if (_traceState) {
-				traceManager.stop();
-				traceManager.clear();
-				traceManager.restart();
-			}
+			// this.updateCamera(camera);
+			// if (_traceState && traceManager) {
+			// 	traceManager.stop();
+			// 	traceManager.clear();
+			// 	traceManager.restart();
+			// }
 		}
     };
 
 	this.setupRenderer = function () {
+		if(container){
+			return;
+		}
         container = document.createElement('div');
         canvas = document.createElement('canvas');
         container.style.pointerEvents = "none";
@@ -219,34 +225,39 @@ THREE.XRayRenderer = function (parameters) {
 
 		traceManager.updatePixels = updatePixelsRect.bind(this);
 		traceManager.updateIndicator = updateIndicator.bind(this);
-		var timeoutid = 0;
-		editor.signals.cameraChanged.add(function () {
-			clearCanvas();
-			updateCamera(editor.camera);
-			canvas.style.display = "none";
 
-			if (traceManager) {
-				traceManager.stop();
-				traceManager.clear();
+		if(typeof editor != "undefined"){
+			editor.signals.cameraChanged.add(this.onCameraChange);
+        }
+
+	};
+	var timeoutId = 0;
+    this.onCameraChange = function () {
+		clearCanvas();
+		this.updateCamera(this.threejsCamera);
+		canvas.style.display = "none";
+
+		if (traceManager) {
+			traceManager.stop();
+			traceManager.clear();
+		}
+		clearTimeout(timeoutId);
+		timeoutId = setTimeout(function () {
+			if (_traceState) {
+				traceManager.restart();
 			}
-			clearTimeout(timeoutid);
-			timeoutid = setTimeout(function () {
-				if (_traceState) {
-					traceManager.restart();
-					if(_viewState) {
-                        canvas.style.display = "";
-                    }
-				}
-			}, 500);
-		});
-	}
+			if(_viewState) {
+				canvas.style.display = "";
+			}
+		}, 500);
+    }.bind(this);
 
-	function updateCamera(camera) {
+	this.updateCamera = function(camera) {
 		if (view) {
 			var ratio1 = width / webglWidth;
 			var ratio2 = height / webglHeight;
 			var ratio = ratio1 < ratio2 ? ratio1 : ratio2;
-			view.updateCamera(editor.camera);
+			view.updateCamera(camera);
 		}
 	}
 
@@ -320,7 +331,7 @@ THREE.XRayRenderer = function (parameters) {
 			});
 		}
 
-		updateCamera(editor.camera);
+		this.updateCamera(this.threejsCamera);
 	}
 
 	function clearCanvas() {
@@ -401,7 +412,7 @@ THREE.XRayRenderer = function (parameters) {
 
 	//Override threads for debugging
 	//XRAY.ThreadPool.overrideMaxThreads = 1;
-	this.initialize();
+	initialize();
 
 };
 
