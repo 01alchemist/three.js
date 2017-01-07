@@ -131,7 +131,7 @@ THREE.XRayRenderer = function (parameters) {
 		}
 	};
 
-	let initialize = function(maxMemory) {
+	let initialize = (maxMemory) => {
 
 		if (typeof turbo === "undefined") {
 			if (typeof SharedArrayBuffer !== "undefined") {
@@ -140,9 +140,10 @@ THREE.XRayRenderer = function (parameters) {
 		} else {
 			turbo.init(maxMemory || 1024);
 			Initialize_XRayKernel(XRAY);
+			console.log("XRay kernel inilialized");
 			setTimeout(this.setupRenderer.bind(this), 0);
 		}
-	}.bind(this);
+	};
 
 	/**
 	 * Setup XRay renderer

@@ -645,7 +645,7 @@ var XRAY = XRAY || {};
         };
 
         // Prepare three.js scene
-        let identityMatrix = new THREE.Matrix4().identity();
+        var identityMatrix = new THREE.Matrix4().identity();
 
         this.loadChildren = function (parent) {
             let child;

@@ -35,6 +35,7 @@
 		<script src="js/loaders/DDSLoader.js"></script>
 		<script src="js/loaders/MTLLoader.js"></script>
 		<script src="js/loaders/OBJLoader.js"></script>
+		<script src="js/controls/EditorControls.js"></script>
 
 		<!-- XRay Renderer -->
 		<script src="js/renderers/xray/XRayRuntime.js"></script>
@@ -69,6 +70,19 @@
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
 				camera.position.y = 90;
 				camera.position.z = 250;
+				
+
+				renderer = new THREE.XRayRenderer();
+				
+				controls = new THREE.EditorControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', () => {
+					render();
+					renderer.onCameraChange();
+				}); // remove when using animation loop
+				// enable animation loop when using damping or autorotation
+				//controls.enableDamping = true;
+				//controls.dampingFactor = 0.25;
+				controls.enableZoom = false;
 
 				// scene
 
@@ -77,9 +91,66 @@
 				var ambient = new THREE.AmbientLight( 0x444444 );
 				scene.add( ambient );
 
-				var directionalLight = new THREE.PointLight( 0xffeedd, 1, 300);
-				directionalLight.position.set( 0, 100, 100);
-				scene.add( directionalLight );
+				var pointLight = new THREE.PointLight( 0xffeedd, 10, 300);
+				pointLight.position.set( 0, 199, 100);
+				scene.add( pointLight );
+
+
+				//Room
+				var size = 200;
+				var geometry = new THREE.BoxBufferGeometry(size,1,size);
+				var material = new THREE.MeshStandardMaterial({color: 0xffeedd});
+				//material.ior = 1.5;
+				//material.gloss = XRAY.Utils.Radians(15);
+				var ground = new THREE.Mesh(geometry, material);
+				ground.castShadow = false;
+				ground.receiveShadow = true;
+				ground.updateMatrixWorld();
+				scene.add(ground);
+
+				var geometry = new THREE.BoxBufferGeometry(size,1,size);
+				var material = new THREE.MeshStandardMaterial({color: 0xffeedd});
+				//material.ior = 1.5;
+				//material.gloss = XRAY.Utils.Radians(15);
+				var top = new THREE.Mesh(geometry, material);
+				top.position.set(0,size,0);
+				top.castShadow = false;
+				top.receiveShadow = true;
+				top.updateMatrixWorld();
+				scene.add(top);
+
+				geometry = new THREE.BoxBufferGeometry(1,size,size);
+				material = new THREE.MeshPhongMaterial({color: 0xFF0000});
+				//material.ior = 1.5;
+				//material.gloss = XRAY.Utils.Radians(15);
+				var left = new THREE.Mesh(geometry, material);
+				left.position.set(-size/2,size/2,0);
+				left.castShadow = false;
+				left.receiveShadow = true;
+				left.updateMatrixWorld();
+				scene.add(left);
+
+				geometry = new THREE.BoxBufferGeometry(1,size,size);
+				material = new THREE.MeshPhongMaterial({color: 0x00FF00});
+				//material.ior = 1.5;
+				//material.gloss = XRAY.Utils.Radians(15);
+				var right = new THREE.Mesh(geometry, material);
+				right.position.set(size/2,size/2,0);
+				right.castShadow = false;
+				right.receiveShadow = true;
+				right.updateMatrixWorld();
+				scene.add(right);
+
+				geometry = new THREE.BoxBufferGeometry(size,size,1);
+				material = new THREE.MeshPhongMaterial({color: 0xB9B9B9});
+				//material.ior = 1.5;
+				//material.gloss = XRAY.Utils.Radians(15);
+				var back = new THREE.Mesh(geometry, material);
+				back.position.set(0,size/2,-size/2);
+				back.castShadow = false;
+				back.receiveShadow = true;
+				back.updateMatrixWorld();
+				scene.add(back);
 
 				// model
 
@@ -123,7 +194,6 @@
 
 				//
 
-				renderer = new THREE.XRayRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
