@@ -357,7 +357,7 @@ THREE.XRayRenderer = function (parameters) {
 
 	function updateIndicator(rect) {
 
-		var color = yellow();
+		var color = yellow;
 
 		//top-left
 		fillRect({ x: rect.xoffset, y: rect.yoffset, width: 4, height: 1 }, color);
@@ -393,9 +393,8 @@ THREE.XRayRenderer = function (parameters) {
 		//context.putImageData(imageData, 0, 0);
 	}
 
-	function yellow() {
-	    return {r:1, g:186/255, b:27/255};
-    }
+	var yellow = {r:1, g:186/255, b:27/255};
+
 	function randomColor() {
 		return { r: Math.random(), g: Math.random(), b: Math.random() };
 	}
