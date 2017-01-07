@@ -105,7 +105,7 @@ Sidebar.Project = function ( editor ) {
 	// XRay toggle
 
 	var xrayRow = new UI.Row();
-	config.setKey( 'project/xray-gi-view', true);
+	config.setKey( 'project/xray-gi-view', false);
 	var xray = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-view' ), "View" ).onChange( function () {
 
 		config.setKey( 'project/xray-gi-view', this.getValue() );
@@ -113,7 +113,7 @@ Sidebar.Project = function ( editor ) {
 
 	} );
 
-	config.setKey( 'project/xray-gi-raytrace', true);
+	config.setKey( 'project/xray-gi-raytrace', false);
 	var raytrace = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-raytrace' ), "Trace" ).onChange( function () {
 
 		config.setKey( 'project/xray-gi-raytrace', this.getValue() );

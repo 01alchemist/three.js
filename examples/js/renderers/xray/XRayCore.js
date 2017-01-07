@@ -549,16 +549,18 @@ var XRAY = XRAY || {};
 
             currentIterations++;
             _isIterationFinished = false;
-            deferredQueue.sort(function (a, b) {
-                return b.time - a.time;
-            });
-            queue = deferredQueue;
+            if(deferredQueue) {
+                deferredQueue.sort(function (a, b) {
+                    return b.time - a.time;
+                });
+                queue = deferredQueue;
+            }
 
             deferredQueue = [];
 
             //console.time('trace::iteration completed');
             this.start();
-        }
+        };
 
         function reportFinish(){
             totalTime = performance.now() - startTime;
@@ -676,7 +678,8 @@ var XRAY = XRAY || {};
                         return shape;
                     } else {
                         let mat = XRAY.Matrix.fromTHREEJS(matrixWorld.elements);
-                        return XRAY.TransformedShape.NewTransformedShape(shape, mat);
+                        let transShape = XRAY.TransformedShape.NewTransformedShape(shape, mat);
+                        return transShape;
                     }
 
                 case "PointLight":
