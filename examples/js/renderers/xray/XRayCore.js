@@ -112,11 +112,11 @@ var XRAY = XRAY || {};
         };
 
         this.send = function (data, buffers) {
-            // if (navigator.userAgent.indexOf("Firefox") > -1) {
+            try{
                 instance.postMessage(data);
-            // } else {
-            //     instance.postMessage(data, buffers);
-            // }
+            } catch (e) {
+                instance.postMessage(data, buffers);
+            }
         };
 
         this.terminate = function () {
