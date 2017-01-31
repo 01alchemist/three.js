@@ -25,11 +25,11 @@ THREE.XRayRenderer = function (parameters) {
 	let view;
 	let traceManager;
 	this.threejsScene = null;
-	let bucketSize = 64;
+	let bucketSize = 64/2;
 	//Render options
 	let cameraSamples = -1;
 	let hitSamples = 1;
-	let bounces = 4;
+	let bounces = 3;
 	let targetIterations = 1000;
 	let blockIterations = 1;
 
@@ -412,7 +412,7 @@ THREE.XRayRenderer = function (parameters) {
 	}
 
 	//Override threads for debugging
-	//XRAY.ThreadPool.overrideMaxThreads = 1;
+	XRAY.ThreadPool.overrideMaxThreads = 7;
 	initialize();
 
 };

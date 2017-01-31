@@ -54,10 +54,10 @@ var XRAY = XRAY || {};
         instance.onmessage = (event) => {
             if (event.data == TraceJob.INITIALIZED) {
                 this.initialized = true;
-                _isTracing = false;
                 if (this.onInitComplete) {
                     this.onInitComplete(this);
                 }
+                _isTracing = false;
             }
             if (event.data == TraceJob.UPDATED) {
                 if (this.onUpdateComplete) {
@@ -65,18 +65,18 @@ var XRAY = XRAY || {};
                 }
             }
             if (event.data == TraceJob.TRACED) {
-                _isTracing = false;
                 Atomics.store(TraceManager.flags, this.id, Thread.IDLE);
                 if (this.onTraceComplete) {
                     this.onTraceComplete(this);
                 }
+                _isTracing = false;
             }
             if (event.data == TraceJob.LOCKED) {
-                _isTracing = false;
                 Atomics.store(TraceManager.flags, this.id, Thread.LOCKED);
                 if (this.onThreadLocked) {
                     this.onThreadLocked(this);
                 }
+                _isTracing = false;
             }
         };
 
@@ -96,11 +96,11 @@ var XRAY = XRAY || {};
 
         this.trace = function (parameters, onComplete) {
             if (Atomics.load(TraceManager.flags, this.id) === Thread.LOCKING) {
-                _isTracing = false;
                 Atomics.store(TraceManager.flags, this.id, Thread.LOCKED);
                 if (this.onThreadLocked) {
                     this.onThreadLocked(this);
                 }
+                _isTracing = false;
             }
             else {
                 _isTracing = true;
@@ -137,8 +137,8 @@ var XRAY = XRAY || {};
      */
     let TraceJob = function TraceJob(renderOptions) {
         this.parameters = renderOptions;
-        this.finished = false;
         this.runCount = 0;
+        let finished = false;
         let time = 0;
 
         Object.defineProperty(this, "time", {
@@ -146,12 +146,19 @@ var XRAY = XRAY || {};
                 return time;
             }
         });
+        Object.defineProperty(this, "finished", {
+            get: function () {
+                return finished;
+            }
+        });
 
         this.start = function (thread, onComplete) {
+            finished = false;
             let startTime = performance.now();
             let parameters = this.getTraceParameters();
             thread.trace(parameters, function (thread) {
                 time = performance.now() - startTime;
+                finished = true;
                 if (onComplete) {
                     onComplete(this, thread);
                 }
@@ -293,7 +300,7 @@ var XRAY = XRAY || {};
         this.clearJobs = function () {
             queue = [];
             referenceQueue = [];
-        }
+        };
         this.add = function (job) {
             queue.push(job);
             referenceQueue.push(job);
@@ -368,13 +375,26 @@ var XRAY = XRAY || {};
                 for (let i = 0; i < threads.length; i++) {
                     thread = threads[i];
                     if (thread.isTracing) {
-                        if (Atomics.load(flags, i) === Thread.TRACING || Atomics.load(flags, i) === Thread.LOCKING) {
-                            return false;
-                        }
+                        // if (Atomics.load(flags, i) === Thread.TRACING || Atomics.load(flags, i) === Thread.LOCKING) {
+                        //     return false;
+                        // }
+                        return false;
                     }
 
                 }
                 return true;
+            }
+        });
+
+        Object.defineProperty(this, "isAllJobsDone", {
+            get: function () {
+                let job;
+                let done = true;
+                for (let i = 0; i < referenceQueue.length; i++) {
+                    job = referenceQueue[i];
+                    done = job.finished && done;
+                }
+                return done;
             }
         });
 
@@ -528,8 +548,9 @@ var XRAY = XRAY || {};
                 }.bind(this));
 
             } else {
-                if (this.isAllThreadsFree) {
+                if (this.isAllThreadsFree && this.isAllJobsDone) {
                     _isIterationFinished = true;
+                    currentIterations++;
                     //console.timeEnd('trace::iteration completed');
                     setTimeout(this.initDeferredQueue.bind(this), 50);
                 }
@@ -547,7 +568,6 @@ var XRAY = XRAY || {};
                 return;
             }
 
-            currentIterations++;
             _isIterationFinished = false;
             if(deferredQueue) {
                 deferredQueue.sort(function (a, b) {
@@ -886,9 +906,22 @@ var XRAY = XRAY || {};
         let material;
         let emissiveColor = srcMaterial.emissive.getHex();
         if(emissiveColor > 0){
-            let emissiveHSL = srcMaterial.emissive.getHSL();
-            let intensity = srcMaterial.intensity ? srcMaterial.intensity : emissiveHSL.l;
+            let intensity = 1;
+            if(srcMaterial.name && srcMaterial.name != "" && srcMaterial.name.indexOf("intensity") > -1){
+                intensity = srcMaterial.name.split("intensity_")[1];
+            }else{
+                let emissiveHSL = srcMaterial.emissive.getHSL();
+                intensity = srcMaterial.intensity ? srcMaterial.intensity : emissiveHSL.l;
+            }
             material = XRAY.Material.LightMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()), intensity * 10);
+             if(srcMaterial.map){
+                let image = srcMaterial.map.image;
+                let imgData = XRAY.TextureUtils.getImageData(image);
+                if(imgData) {
+                    let texture = XRAY.Texture.NewTexture(imgData, image.width, image.height);
+                    XRAY.Material.setTexture(material, texture);
+                }
+            }
             material.isLight = true;
         }else {
             material = XRAY.Material.DiffuseMaterial(XRAY.Color.HexColor(srcMaterial.color.getHex()));

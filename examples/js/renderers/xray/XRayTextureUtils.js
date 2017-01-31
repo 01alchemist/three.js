@@ -16,13 +16,14 @@ var XRAY = XRAY || {};
         if(!ctx){
             create2dDrawingContext();
         }
-        if(image instanceof HTMLImageElement) {
-            ctx.drawImage(image, 0, 0);
-            let pixels = ctx.getImageData(0, 0, image.width, image.height).data;
-            return pixels;
-        }else{
-            return null;
+        if(ctx && image instanceof HTMLImageElement) {
+            if(image.width > 0 && image.height > 0){
+                ctx.drawImage(image, 0, 0);
+                let pixels = ctx.getImageData(0, 0, image.width, image.height).data;
+                return pixels;
+            }
         }
+        return null;
     };
 
     XRAY.TextureUtils = TextureUtils
