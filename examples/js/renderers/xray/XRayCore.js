@@ -733,9 +733,10 @@ var XRAY = XRAY || {};
                         unsafe._mem_i32[(t + 8) >> 2] = XRAY.Vector.NewVector(vertices[face.a].x, vertices[face.a].y, vertices[face.a].z);
                         unsafe._mem_i32[(t + 12) >> 2] = XRAY.Vector.NewVector(vertices[face.b].x, vertices[face.b].y, vertices[face.b].z);
                         unsafe._mem_i32[(t + 16) >> 2] = XRAY.Vector.NewVector(vertices[face.c].x, vertices[face.c].y, vertices[face.c].z);
-                        unsafe._mem_i32[(t + 20) >> 2] = XRAY.Vector.NewVector();
-                        unsafe._mem_i32[(t + 24) >> 2] = XRAY.Vector.NewVector();
-                        unsafe._mem_i32[(t + 28) >> 2] = XRAY.Vector.NewVector();
+
+                        unsafe._mem_i32[(t + 20) >> 2] = XRAY.Vector.NewVector(face.vertexNormals[0].x,face.vertexNormals[0].y, face.vertexNormals[0].z);
+                        unsafe._mem_i32[(t + 24) >> 2] = XRAY.Vector.NewVector(face.vertexNormals[1].x,face.vertexNormals[1].y, face.vertexNormals[1].z);
+                        unsafe._mem_i32[(t + 28) >> 2] = XRAY.Vector.NewVector(face.vertexNormals[2].x,face.vertexNormals[2].y, face.vertexNormals[2].z);
 
                         triangles.push(t);
                     }

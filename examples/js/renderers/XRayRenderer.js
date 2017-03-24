@@ -25,7 +25,7 @@ THREE.XRayRenderer = function (parameters) {
 	let view;
 	let traceManager;
 	this.threejsScene = null;
-	let bucketSize = 64/2;
+	let bucketSize = 64;
 	//Render options
 	let cameraSamples = -1;
 	let hitSamples = 1;
