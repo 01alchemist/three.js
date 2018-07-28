@@ -1,9 +1,10 @@
-import { FileLoader } from './FileLoader';
-import { DefaultLoadingManager } from './LoadingManager';
-
 /**
  * @author mrdoob / http://mrdoob.com/
  */
+
+import { Cache } from './Cache.js';
+import { DefaultLoadingManager } from './LoadingManager.js';
+
 
 function ImageLoader( manager ) {
 
@@ -13,57 +14,75 @@ function ImageLoader( manager ) {
 
 Object.assign( ImageLoader.prototype, {
 
+	crossOrigin: 'anonymous',
+
 	load: function ( url, onLoad, onProgress, onError ) {
+
+		if ( url === undefined ) url = '';
+
+		if ( this.path !== undefined ) url = this.path + url;
+
+		url = this.manager.resolveURL( url );
 
 		var scope = this;
 
+		var cached = Cache.get( url );
+
+		if ( cached !== undefined ) {
+
+			scope.manager.itemStart( url );
+
+			setTimeout( function () {
+
+				if ( onLoad ) onLoad( cached );
+
+				scope.manager.itemEnd( url );
+
+			}, 0 );
+
+			return cached;
+
+		}
+
 		var image = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'img' );
-		image.onload = function () {
 
-			image.onload = null;
+		function onImageLoad() {
 
-			URL.revokeObjectURL( image.src );
+			image.removeEventListener( 'load', onImageLoad, false );
+			image.removeEventListener( 'error', onImageError, false );
 
-			if ( onLoad ) onLoad( image );
+			Cache.add( url, this );
+
+			if ( onLoad ) onLoad( this );
 
 			scope.manager.itemEnd( url );
 
-		};
-		image.onerror = onError;
+		}
 
-		if ( url.indexOf( 'data:' ) === 0 ) {
+		function onImageError( event ) {
 
-			image.src = url;
+			image.removeEventListener( 'load', onImageLoad, false );
+			image.removeEventListener( 'error', onImageError, false );
 
-		} else if ( this.crossOrigin !== undefined ) {
+			if ( onError ) onError( event );
 
-			// crossOrigin doesn't work with URL.createObjectURL()?
+			scope.manager.itemEnd( url );
+			scope.manager.itemError( url );
 
-			image.crossOrigin = this.crossOrigin;
-			image.src = url;
+		}
 
-		} else {
+		image.addEventListener( 'load', onImageLoad, false );
+		image.addEventListener( 'error', onImageError, false );
 
-			var loader = new FileLoader();
-			loader.setPath( this.path );
-			loader.setResponseType( 'blob' );
-			loader.setWithCredentials( this.withCredentials );
+		if ( url.substr( 0, 5 ) !== 'data:' ) {
 
-			// By default the FileLoader requests files to be loaded with a MIME
-			// type of `text/plain`. Using `URL.createObjectURL()` with SVGs that
-			// have a MIME type of `text/plain` results in an error, so explicitly
-			// set the SVG MIME type.
-			if ( /\.svg$/.test( url ) ) loader.setMimeType( 'image/svg+xml' );
-
-			loader.load( url, function ( blob ) {
-
-				image.src = URL.createObjectURL( blob );
-
-			}, onProgress, onError );
+			if ( this.crossOrigin !== undefined ) image.crossOrigin = this.crossOrigin;
 
 		}
 
 		scope.manager.itemStart( url );
+
+		image.src = url;
 
 		return image;
 
@@ -72,13 +91,6 @@ Object.assign( ImageLoader.prototype, {
 	setCrossOrigin: function ( value ) {
 
 		this.crossOrigin = value;
-		return this;
-
-	},
-
-	setWithCredentials: function ( value ) {
-
-		this.withCredentials = value;
 		return this;
 
 	},
