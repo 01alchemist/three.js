@@ -8,9 +8,9 @@ function glsl() {
 
 			var transformedCode = 'export default ' + JSON.stringify(
 				code
-					.replace( /[ \t]*\/\/.*\n/g, '' )
-					.replace( /[ \t]*\/\*[\s\S]*?\*\//g, '' )
-					.replace( /\n{2,}/g, '\n' )
+					.replace( /[ \t]*\/\/.*\n/g, '' ) // remove //
+					.replace( /[ \t]*\/\*[\s\S]*?\*\//g, '' ) // remove /* */
+					.replace( /\n{2,}/g, '\n' ) // # \n+ to \n
 			) + ';';
 			return {
 				code: transformedCode,
@@ -24,21 +24,22 @@ function glsl() {
 }
 
 export default {
-	entry: 'src/Three.js',
-	indent: '\t',
+	input: 'src/Three.js',
 	plugins: [
 		glsl()
 	],
 	// sourceMap: true,
-	targets: [
+	output: [
 		{
 			format: 'umd',
-			moduleName: 'THREE',
-			dest: 'build/three.js'
+			name: 'THREE',
+			file: 'build/three.js',
+			indent: '\t'
 		},
 		{
 			format: 'es',
-			dest: 'build/three.module.js'
+			file: 'build/three.module.js',
+			indent: '\t'
 		}
 	]
 };

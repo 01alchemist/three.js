@@ -1,8 +1,14 @@
 /**
  * @author jonobr1 / http://jonobr1.com
+ * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Geometry } from '../core/Geometry';
+import { Geometry } from '../core/Geometry.js';
+import { BufferGeometry } from '../core/BufferGeometry.js';
+import { Float32BufferAttribute } from '../core/BufferAttribute.js';
+import { ShapeUtils } from '../extras/ShapeUtils.js';
+
+// ShapeGeometry
 
 function ShapeGeometry( shapes, curveSegments ) {
 
@@ -31,13 +37,17 @@ function ShapeGeometry( shapes, curveSegments ) {
 ShapeGeometry.prototype = Object.create( Geometry.prototype );
 ShapeGeometry.prototype.constructor = ShapeGeometry;
 
-/**
- * @author Mugen87 / https://github.com/Mugen87
- */
+ShapeGeometry.prototype.toJSON = function () {
 
-import { Float32BufferAttribute, Uint16BufferAttribute, Uint32BufferAttribute } from '../core/BufferAttribute';
-import { BufferGeometry } from '../core/BufferGeometry';
-import { ShapeUtils } from '../extras/ShapeUtils';
+	var data = Geometry.prototype.toJSON.call( this );
+
+	var shapes = this.parameters.shapes;
+
+	return toJSON( shapes, data );
+
+};
+
+// ShapeBufferGeometry
 
 function ShapeBufferGeometry( shapes, curveSegments ) {
 
@@ -52,10 +62,14 @@ function ShapeBufferGeometry( shapes, curveSegments ) {
 
 	curveSegments = curveSegments || 12;
 
+	// buffers
+
+	var indices = [];
 	var vertices = [];
 	var normals = [];
 	var uvs = [];
-	var indices = [];
+
+	// helper variables
 
 	var groupStart = 0;
 	var groupCount = 0;
@@ -83,7 +97,7 @@ function ShapeBufferGeometry( shapes, curveSegments ) {
 
 	// build geometry
 
-	this.setIndex( new ( indices.length > 65535 ? Uint32BufferAttribute : Uint16BufferAttribute )( indices, 1 ) );
+	this.setIndex( indices );
 	this.addAttribute( 'position', new Float32BufferAttribute( vertices, 3 ) );
 	this.addAttribute( 'normal', new Float32BufferAttribute( normals, 3 ) );
 	this.addAttribute( 'uv', new Float32BufferAttribute( uvs, 2 ) );
@@ -167,5 +181,42 @@ function ShapeBufferGeometry( shapes, curveSegments ) {
 
 ShapeBufferGeometry.prototype = Object.create( BufferGeometry.prototype );
 ShapeBufferGeometry.prototype.constructor = ShapeBufferGeometry;
+
+ShapeBufferGeometry.prototype.toJSON = function () {
+
+	var data = BufferGeometry.prototype.toJSON.call( this );
+
+	var shapes = this.parameters.shapes;
+
+	return toJSON( shapes, data );
+
+};
+
+//
+
+function toJSON( shapes, data ) {
+
+	data.shapes = [];
+
+	if ( Array.isArray( shapes ) ) {
+
+		for ( var i = 0, l = shapes.length; i < l; i ++ ) {
+
+			var shape = shapes[ i ];
+
+			data.shapes.push( shape.uuid );
+
+		}
+
+	} else {
+
+		data.shapes.push( shapes.uuid );
+
+	}
+
+	return data;
+
+}
+
 
 export { ShapeGeometry, ShapeBufferGeometry };

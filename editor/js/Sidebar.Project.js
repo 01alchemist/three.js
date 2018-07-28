@@ -22,7 +22,49 @@ Sidebar.Project = function ( editor ) {
 	container.setBorderTop( '0' );
 	container.setPaddingTop( '20px' );
 
-	// class
+	// Title
+
+	var titleRow = new UI.Row();
+	var title = new UI.Input( config.getKey( 'project/title' ) ).setLeft( '100px' ).onChange( function () {
+
+		config.setKey( 'project/title', this.getValue() );
+
+	} );
+
+	titleRow.add( new UI.Text( 'Title' ).setWidth( '90px' ) );
+	titleRow.add( title );
+
+	container.add( titleRow );
+
+	// Editable
+
+	var editableRow = new UI.Row();
+	var editable = new UI.Checkbox( config.getKey( 'project/editable' ) ).setLeft( '100px' ).onChange( function () {
+
+		config.setKey( 'project/editable', this.getValue() );
+
+	} );
+
+	editableRow.add( new UI.Text( 'Editable' ).setWidth( '90px' ) );
+	editableRow.add( editable );
+
+	container.add( editableRow );
+
+	// VR
+
+	var vrRow = new UI.Row();
+	var vr = new UI.Checkbox( config.getKey( 'project/vr' ) ).setLeft( '100px' ).onChange( function () {
+
+		config.setKey( 'project/vr', this.getValue() );
+
+	} );
+
+	vrRow.add( new UI.Text( 'VR' ).setWidth( '90px' ) );
+	vrRow.add( vr );
+
+	container.add( vrRow );
+
+	// Renderer
 
 	var options = {};
 
@@ -56,7 +98,7 @@ Sidebar.Project = function ( editor ) {
 
 	}
 
-	// antialiasing
+	// Renderer / Antialias
 
 	var rendererPropertiesRow = new UI.Row().setMarginLeft( '90px' );
 
@@ -68,7 +110,7 @@ Sidebar.Project = function ( editor ) {
 	} );
 	rendererPropertiesRow.add( rendererAntialias );
 
-	// shadow
+	// Renderer / Shadows
 
 	var rendererShadows = new UI.THREE.Boolean( config.getKey( 'project/renderer/shadows' ), 'shadows' ).onChange( function () {
 
@@ -80,7 +122,7 @@ Sidebar.Project = function ( editor ) {
 
 	rendererPropertiesRow.add( new UI.Break() );
 
-	// gamma input
+	// Renderer / Gamma input
 
 	var rendererGammaInput = new UI.THREE.Boolean( config.getKey( 'project/renderer/gammaInput' ), 'γ input' ).onChange( function () {
 
@@ -90,7 +132,7 @@ Sidebar.Project = function ( editor ) {
 	} );
 	rendererPropertiesRow.add( rendererGammaInput );
 
-	// gamma output
+	// Renderer / Gamma output
 
 	var rendererGammaOutput = new UI.THREE.Boolean( config.getKey( 'project/renderer/gammaOutput' ), 'γ output' ).onChange( function () {
 
@@ -102,72 +144,43 @@ Sidebar.Project = function ( editor ) {
 
 	container.add( rendererPropertiesRow );
 
-	// XRay toggle
+    // XRay toggle
 
-	var xrayRow = new UI.Row();
-	config.setKey( 'project/xray-gi-view', false);
-	var xray = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-view' ), "View" ).onChange( function () {
+    var xrayRow = new UI.Row();
+    config.setKey( 'project/xray-gi-view', false);
+    var xray = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-view' ), "View" ).onChange( function () {
 
-		config.setKey( 'project/xray-gi-view', this.getValue() );
-		signals.xrayViewStateChanged.dispatch(this.getValue());
+        config.setKey( 'project/xray-gi-view', this.getValue() );
+        signals.xrayViewStateChanged.dispatch(this.getValue());
 
-	} );
+    } );
 
-	config.setKey( 'project/xray-gi-raytrace', false);
-	var raytrace = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-raytrace' ), "Trace" ).onChange( function () {
+    config.setKey( 'project/xray-gi-raytrace', false);
+    var raytrace = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-raytrace' ), "Trace" ).onChange( function () {
 
-		config.setKey( 'project/xray-gi-raytrace', this.getValue() );
-		signals.xrayTraceStateChanged.dispatch(this.getValue());
+        config.setKey( 'project/xray-gi-raytrace', this.getValue() );
+        signals.xrayTraceStateChanged.dispatch(this.getValue());
 
-	} );
+    } );
 
-	xrayRow.add( new UI.Text( 'XRAY' ).setWidth( '90px' ) );
-	xrayRow.add( xray );
-	xrayRow.add( raytrace );
+    xrayRow.add( new UI.Text( 'XRAY' ).setWidth( '90px' ) );
+    xrayRow.add( xray );
+    xrayRow.add( raytrace );
 
-	container.add( xrayRow );
+    container.add( xrayRow );
 
-	// XRay reload
+    // XRay reload
 
-	var xrayUpdateRow = new UI.Row();
-	var xrayUpdate = new UI.Button( "Update scene" ).setLeft( '95px' ).onClick( function () {
+    var xrayUpdateRow = new UI.Row();
+    var xrayUpdate = new UI.Button( "Update scene" ).setLeft( '95px' ).onClick( function () {
 
-		signals.xrayUpdateScene.dispatch(true);
+        signals.xrayUpdateScene.dispatch(true);
 
-	} );
+    } );
 
-	xrayUpdateRow.add( xrayUpdate );
+    xrayUpdateRow.add( xrayUpdate );
 
-	container.add( xrayUpdateRow );
-
-	// Editable
-
-	var editableRow = new UI.Row();
-	var editable = new UI.Checkbox( config.getKey( 'project/editable' ) ).setLeft( '100px' ).onChange( function () {
-
-		config.setKey( 'project/editable', this.getValue() );
-
-	} );
-
-	editableRow.add( new UI.Text( 'Editable' ).setWidth( '90px' ) );
-	editableRow.add( editable );
-
-	container.add( editableRow );
-
-	// VR
-
-	var vrRow = new UI.Row();
-	var vr = new UI.Checkbox( config.getKey( 'project/vr' ) ).setLeft( '100px' ).onChange( function () {
-
-		config.setKey( 'project/vr', this.getValue() );
-		// updateRenderer();
-
-	} );
-
-	vrRow.add( new UI.Text( 'VR' ).setWidth( '90px' ) );
-	vrRow.add( vr );
-
-	container.add( vrRow );
+    container.add( xrayUpdateRow );
 
 	//
 
@@ -187,7 +200,7 @@ Sidebar.Project = function ( editor ) {
 
 		rendererPropertiesRow.setDisplay( type === 'WebGLRenderer' ? '' : 'none' );
 		xrayRow.setDisplay( type === 'WebGL+XRay' ? '' : 'none' );
-		
+
 		type = rendererTypes[ type ] === undefined ? 'WebGLRenderer' : type;
 
 		var renderer = new rendererTypes[ type ]( { antialias: antialias} );
