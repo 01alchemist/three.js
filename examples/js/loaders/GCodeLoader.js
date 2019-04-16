@@ -23,11 +23,19 @@ THREE.GCodeLoader.prototype.load = function ( url, onLoad, onProgress, onError )
 	var self = this;
 
 	var loader = new THREE.FileLoader( self.manager );
+	loader.setPath( self.path );
 	loader.load( url, function ( text ) {
 
 		onLoad( self.parse( text ) );
 
 	}, onProgress, onError );
+
+};
+
+THREE.GCodeLoader.prototype.setPath = function ( value ) {
+
+	this.path = value;
+	return this;
 
 };
 
@@ -138,7 +146,7 @@ THREE.GCodeLoader.prototype.parse = function ( data ) {
 		} else if ( cmd === 'G2' || cmd === 'G3' ) {
 
 			//G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
-			console.warn( 'THREE.GCodeLoader: Arc command not supported' );
+			//console.warn( 'THREE.GCodeLoader: Arc command not supported' );
 
 		} else if ( cmd === 'G90' ) {
 
@@ -162,7 +170,7 @@ THREE.GCodeLoader.prototype.parse = function ( data ) {
 
 		} else {
 
-			console.warn( 'THREE.GCodeLoader: Command not supported:' + cmd );
+			//console.warn( 'THREE.GCodeLoader: Command not supported:' + cmd );
 
 		}
 

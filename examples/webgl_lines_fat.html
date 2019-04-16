@@ -38,7 +38,7 @@
 
 		<script src="js/geometries/hilbert3D.js"></script>
 
-		<script src="js/Detector.js"></script>
+		<script src="js/WebGL.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
 		<script src='js/libs/dat.gui.min.js'></script>
@@ -55,7 +55,11 @@
 
 		<script>
 
-			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+			if ( WEBGL.isWebGLAvailable() === false ) {
+
+				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+			}
 
 			var line, renderer, scene, camera, camera2, controls;
 			var line1;
@@ -201,9 +205,9 @@
 
 				renderer.setScissorTest( true );
 
-				renderer.setScissor( 20, window.innerHeight - insetHeight - 20, insetWidth, insetHeight );
+				renderer.setScissor( 20, 20, insetWidth, insetHeight );
 
-				renderer.setViewport( 20, window.innerHeight - insetHeight - 20, insetWidth, insetHeight );
+				renderer.setViewport( 20, 20, insetWidth, insetHeight );
 
 				camera2.position.copy( camera.position );
 				camera2.quaternion.copy( camera.quaternion );
