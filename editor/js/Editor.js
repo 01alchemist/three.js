@@ -22,6 +22,16 @@ var Editor = function () {
 		startPlayer: new Signal(),
 		stopPlayer: new Signal(),
 
+		//XRay
+
+		xrayViewStateChanged: new Signal(),
+		xrayTraceStateChanged: new Signal(),
+		xrayUpdateScene: new Signal(),
+
+		// actions
+
+		showModal: new Signal(),
+
 		// notifications
 
 		editorCleared: new Signal(),

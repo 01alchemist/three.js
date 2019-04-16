@@ -13,7 +13,8 @@ Sidebar.Project = function ( editor ) {
 		'WebGLRenderer': THREE.WebGLRenderer,
 		'SVGRenderer': THREE.SVGRenderer,
 		'SoftwareRenderer': THREE.SoftwareRenderer,
-		'RaytracingRenderer': THREE.RaytracingRenderer
+		'RaytracingRenderer': THREE.RaytracingRenderer,
+		'WebGL+XRay': THREE.XRayRenderer
 
 	};
 
@@ -121,6 +122,44 @@ Sidebar.Project = function ( editor ) {
 
 	container.add( rendererPropertiesRow );
 
+    // XRay toggle
+
+    var xrayRow = new UI.Row();
+    config.setKey( 'project/xray-gi-view', false);
+    var xray = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-view' ), "View" ).onChange( function () {
+
+        config.setKey( 'project/xray-gi-view', this.getValue() );
+        signals.xrayViewStateChanged.dispatch(this.getValue());
+
+    } );
+
+    config.setKey( 'project/xray-gi-raytrace', false);
+    var raytrace = new UI.THREE.Boolean( config.getKey( 'project/xray-gi-raytrace' ), "Trace" ).onChange( function () {
+
+        config.setKey( 'project/xray-gi-raytrace', this.getValue() );
+        signals.xrayTraceStateChanged.dispatch(this.getValue());
+
+    } );
+
+    xrayRow.add( new UI.Text( 'XRAY' ).setWidth( '90px' ) );
+    xrayRow.add( xray );
+    xrayRow.add( raytrace );
+
+    container.add( xrayRow );
+
+    // XRay reload
+
+    var xrayUpdateRow = new UI.Row();
+    var xrayUpdate = new UI.Button( "Update scene" ).setLeft( '95px' ).onClick( function () {
+
+        signals.xrayUpdateScene.dispatch(true);
+
+    } );
+
+    xrayUpdateRow.add( xrayUpdate );
+
+    container.add( xrayUpdateRow );
+
 	//
 
 	function updateRenderer() {
@@ -132,6 +171,9 @@ Sidebar.Project = function ( editor ) {
 	function createRenderer( type, antialias, shadows ) {
 
 		rendererPropertiesRow.setDisplay( type === 'WebGLRenderer' ? '' : 'none' );
+		xrayRow.setDisplay( type === 'WebGL+XRay' ? '' : 'none' );
+
+		type = rendererTypes[ type ] === undefined ? 'WebGLRenderer' : type;
 
 		var renderer = new rendererTypes[ type ]( { antialias: antialias } );
 

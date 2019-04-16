@@ -301,6 +301,30 @@ var Viewport = function ( editor ) {
 
 	} );
 
+	signals.xrayViewStateChanged.add( function ( newState ) {
+
+		if(renderer && renderer.XRAY){
+			renderer.toggleGIView(newState);
+		}
+
+	} );
+
+	signals.xrayTraceStateChanged.add( function ( newState ) {
+
+		if(renderer && renderer.XRAY){
+			renderer.toggleTrace(newState);
+		}
+
+	} );
+
+	signals.xrayUpdateScene.add( function ( newState ) {
+
+		if(renderer && renderer.XRAY){
+			renderer.updateScene(scene);
+		}
+
+	} );
+
 	signals.rendererChanged.add( function ( newRenderer ) {
 
 		if ( renderer !== null ) {
@@ -451,7 +475,9 @@ var Viewport = function ( editor ) {
 	signals.sceneBackgroundChanged.add( function ( backgroundColor ) {
 
 		scene.background.setHex( backgroundColor );
-
+		if(renderer && renderer.XRAY){
+			renderer.updateBackground(backgroundColor);
+		}
 		render();
 
 	} );

@@ -10,7 +10,7 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 	console.log( 'THREE.RaytracingRenderer', THREE.REVISION );
 
-	parameters = parameters || {};
+	parameters = parameters || {workers:4, workerPath:"RaytracingWorker.js"};
 
 	var scope = this;
 	var pool = [];
@@ -29,9 +29,10 @@ THREE.RaytracingRenderer = function ( parameters ) {
 
 	this.autoClear = true;
 
-	var workers = parameters.workers;
+	var workers = parameters.workers || 4;
 	var blockSize = parameters.blockSize || 64;
 	this.randomize = parameters.randomize;
+	var workerPath = parameters.workerPath || "../examples/js/renderers/RaytracingWorker.js"
 
 	var toRender = [], workerId = 0, sceneId = 0;
 
@@ -42,7 +43,7 @@ THREE.RaytracingRenderer = function ( parameters ) {
 		workers = w || navigator.hardwareConcurrency || 4;
 
 		while ( pool.length < workers ) {
-
+      
 			var worker = new Worker( parameters.workerPath );
 			worker.id = workerId ++;
 
