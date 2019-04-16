@@ -36,12 +36,16 @@
 
 		<script src="../build/three.js"></script>
 
-		<script src="js/Detector.js"></script>
+		<script src="js/WebGL.js"></script>
 		<script src="js/libs/stats.min.js"></script>
 
 		<script>
 
-			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+			if ( WEBGL.isWebGLAvailable() === false ) {
+
+				document.body.appendChild( WEBGL.getWebGLErrorMessage() );
+
+			}
 
 			var container, stats;
 
@@ -83,8 +87,7 @@
 				context.fillStyle = gradient;
 				context.fillRect( 0, 0, canvas.width, canvas.height );
 
-				var shadowTexture = new THREE.Texture( canvas );
-				shadowTexture.needsUpdate = true;
+				var shadowTexture = new THREE.CanvasTexture( canvas );
 
 				var shadowMaterial = new THREE.MeshBasicMaterial( { map: shadowTexture } );
 				var shadowGeo = new THREE.PlaneBufferGeometry( 300, 300, 1, 1 );
